@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<style>
+  @page {
+    size: 279mm 162mm;
+    margin: 0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: #fff;
+    width: 279mm;
+    height: 162mm;
+    overflow: hidden;
+  }
+
+  /* ── Layout ── */
+  .page {
+    display: flex;
+    width: 100%;
+    height: 162mm;
+  }
+
+  /* ── Left stripe ── */
+  .stripe {
+    width: 12mm;
+    background: #c060f5;
+    flex-shrink: 0;
+  }
+
+  /* ── Main content ── */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10mm 14mm 8mm 12mm;
+    position: relative;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 4mm;
+    border-bottom: 0.4mm solid #e9d5ff;
+    padding-bottom: 4mm;
+  }
+  .logo-block img {
+    height: 14mm;
+    width: auto;
+  }
+  .org-details {
+    text-align: right;
+    font-family: Arial, sans-serif;
+  }
+  .org-details .org-name {
+    font-size: 8pt;
+    font-weight: bold;
+    color: #5e1680;
+  }
+  .org-details .org-meta {
+    font-size: 6.5pt;
+    color: #6b7280;
+    margin-top: 0.5mm;
+    line-height: 1.5;
+  }
+
+  /* ── Badge ── */
+  .dc3-badge {
+    display: inline-block;
+    background: #5e1680;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 6.5pt;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    padding: 1.5mm 3mm;
+    border-radius: 2mm;
+    margin-bottom: 3mm;
+    text-transform: uppercase;
+  }
+
+  /* ── Title section ── */
+  .cert-title {
+    font-size: 9pt;
+    color: #6b7280;
+    font-family: Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2mm;
+  }
+  .certifies-text {
+    font-size: 10pt;
+    color: #374151;
+    font-family: Arial, sans-serif;
+    margin-bottom: 2mm;
+  }
+  .participant-name {
+    font-size: 26pt;
+    font-weight: bold;
+    color: #1f2937;
+    letter-spacing: -0.5px;
+    margin-bottom: 1mm;
+    line-height: 1.1;
+  }
+  .course-label {
+    font-size: 9pt;
+    color: #6b7280;
+    font-family: Arial, sans-serif;
+    margin-bottom: 1mm;
+  }
+  .course-name {
+    font-size: 16pt;
+    font-weight: bold;
+    color: #8e22bc;
+    margin-bottom: 3mm;
+    line-height: 1.2;
+  }
+
+  /* ── Details grid ── */
+  .details {
+    display: flex;
+    gap: 6mm;
+    margin-bottom: 4mm;
+    font-family: Arial, sans-serif;
+  }
+  .detail-item {
+    flex: 1;
+  }
+  .detail-label {
+    font-size: 6pt;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5mm;
+  }
+  .detail-value {
+    font-size: 9pt;
+    color: #1f2937;
+    font-weight: bold;
+  }
+
+  /* ── Folio box ── */
+  .folio-box {
+    display: inline-block;
+    background: #faf5ff;
+    border: 0.3mm solid #c060f5;
+    border-radius: 2mm;
+    padding: 1.5mm 3mm;
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    font-weight: bold;
+    color: #5e1680;
+    letter-spacing: 1px;
+  }
+
+  /* ── Bottom section ── */
+  .bottom {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 3mm;
+    border-top: 0.3mm solid #f3e8ff;
+  }
+
+  /* Signatures */
+  .signatures {
+    display: flex;
+    gap: 10mm;
+  }
+  .signature {
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+  .sig-line {
+    width: 42mm;
+    border-bottom: 0.3mm solid #374151;
+    margin-bottom: 1.5mm;
+  }
+  .sig-name {
+    font-size: 7.5pt;
+    font-weight: bold;
+    color: #1f2937;
+  }
+  .sig-title {
+    font-size: 6.5pt;
+    color: #6b7280;
+    margin-top: 0.3mm;
+  }
+
+  /* QR block */
+  .qr-block {
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+  .qr-block img {
+    width: 22mm;
+    height: 22mm;
+    display: block;
+    margin: 0 auto 1mm;
+  }
+  .qr-label {
+    font-size: 5.5pt;
+    color: #9ca3af;
+  }
+  .qr-url {
+    font-size: 5.5pt;
+    color: #8e22bc;
+  }
+
+  /* ── Security footer ── */
+  .security-note {
+    font-family: Arial, sans-serif;
+    font-size: 5.5pt;
+    color: #d1d5db;
+    text-align: center;
+    margin-top: 2mm;
+  }
+
+  /* ── Right panel ── */
+  .right-panel {
+    width: 36mm;
+    background: #faf5ff;
+    border-left: 0.3mm solid #f3e8ff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8mm 5mm;
+    flex-shrink: 0;
+    gap: 4mm;
+  }
+  .right-panel .slogan {
+    font-family: Arial, sans-serif;
+    font-size: 7pt;
+    color: #8e22bc;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+  }
+  .right-panel .validity-box {
+    background: #5e1680;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 6pt;
+    font-weight: bold;
+    text-align: center;
+    padding: 2mm 3mm;
+    border-radius: 2mm;
+    line-height: 1.5;
+  }
+  .right-panel .folio-vertical {
+    font-family: Arial, sans-serif;
+    font-size: 6pt;
+    color: #9ca3af;
+    text-align: center;
+    word-break: break-all;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Left colour stripe -->
+  <div class="stripe"></div>
+
+  <!-- Main content -->
+  <div class="content">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-block">
+        <img src="{{ logo_path }}" alt="Pasitos Education & Health" />
+      </div>
+      <div class="org-details">
+        <div class="org-name">Pasitos Education &amp; Health A.C.</div>
+        <div class="org-meta">
+          Capacitación avalada por la STPS<br/>
+          Valle de los Molinos, Zapopan, Jalisco<br/>
+          info@pasitoseducation.com · (33) 2780-5441
+        </div>
+      </div>
+    </div>
+
+    <!-- Badge -->
+    <div class="dc3-badge">Certificado de Competencia Laboral · DC-3 · STPS</div>
+
+    <!-- Title & name -->
+    <div class="cert-title">Constancia de Habilidades Laborales</div>
+    <div class="certifies-text">Se certifica que</div>
+    <div class="participant-name">{{ nombre }}</div>
+    <div class="course-label">Ha completado satisfactoriamente el programa de capacitación</div>
+    <div class="course-name">{{ curso }}</div>
+
+    <!-- Detail fields -->
+    <div class="details">
+      <div class="detail-item">
+        <div class="detail-label">CURP</div>
+        <div class="detail-value" style="font-family:Courier New,monospace;font-size:8pt;">{{ curp }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Institución</div>
+        <div class="detail-value">{{ institucion }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Período</div>
+        <div class="detail-value">{{ fecha_inicio }} – {{ fecha_termino }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Calificación</div>
+        <div class="detail-value">{{ calificacion }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Fecha de emisión</div>
+        <div class="detail-value">{{ fecha_emision }}</div>
+      </div>
+    </div>
+
+    <!-- Folio -->
+    <div style="margin-bottom:4mm;">
+      <span class="folio-box">{{ folio }}</span>
+    </div>
+
+    <!-- Bottom: signatures + QR -->
+    <div class="bottom">
+      <div class="signatures">
+        <div class="signature">
+          <div class="sig-line"></div>
+          <div class="sig-name">Karla Elizabeth Barba Gómez</div>
+          <div class="sig-title">Directora General<br/>Pasitos Education &amp; Health A.C.</div>
+        </div>
+        <div class="signature">
+          <div class="sig-line"></div>
+          <div class="sig-name">Carla Ko</div>
+          <div class="sig-title">Coordinación Académica<br/>Responsable de Capacitación</div>
+        </div>
+      </div>
+
+      <div class="qr-block">
+        <img src="{{ qr_data_uri }}" alt="QR de verificación" />
+        <div class="qr-label">Verificar autenticidad</div>
+        <div class="qr-url">{{ verify_url }}</div>
+      </div>
+    </div>
+
+    <div class="security-note">
+      Documento emitido con firma digital · Protegido contra alteraciones · {{ folio }}
+    </div>
+
+  </div>
+
+  <!-- Right panel -->
+  <div class="right-panel">
+    <div class="slogan">Capacitación<br/>que transforma<br/>vidas</div>
+    <div class="validity-box">
+      CON VALIDEZ<br/>DC-3<br/>STPS
+    </div>
+    <div class="folio-vertical">{{ folio }}</div>
+  </div>
+
+</div>
+</body>
+</html>
