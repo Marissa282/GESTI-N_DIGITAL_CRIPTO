@@ -1,0 +1,8 @@
+pandas==2.2.2
+openpyxl==3.1.2           # xlsx reader (used by pandas)
+sqlalchemy==2.0.30         # DB toolkit + ORM
+psycopg2-binary==2.9.9     # PostgreSQL driver
+bcrypt==4.1.3              # password hashing
+python-dotenv==1.0.1       # .env loader
+cryptography==42.0.8       # AES-256-GCM field encryption (pipeline/crypto.py)
+flask>=3.0                 # web server + API

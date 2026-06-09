@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verificar Certificado DC-3 — Pasitos Education & Health A.C.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    .gradient-header { background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #7c3aed 100%); }
+    .fade-in { animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .cert-frame { background: linear-gradient(135deg, #f8fafc 0%, #f5f3ff 100%); }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50">
+
+  <!-- Header -->
+  <header class="gradient-header py-4 px-6 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+        </svg>
+      </div>
+      <div>
+        <p class="text-white font-bold text-sm leading-none">Pasitos Education & Health A.C.</p>
+        <p class="text-purple-300 text-xs">Verificación oficial de certificados DC-3</p>
+      </div>
+    </div>
+    <a href="index.html" class="text-purple-200 hover:text-white text-xs transition-colors">← Acceso personal</a>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-xl mx-auto px-4 py-12">
+
+    <!-- Search box -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mb-6 text-center">
+      <div class="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+        <svg class="w-8 h-8 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-900 mb-2">Verificar autenticidad</h1>
+      <p class="text-sm text-slate-500 mb-7">Ingresa el folio del certificado DC-3 para comprobar que es auténtico y fue emitido por Pasitos Education & Health A.C., con validez ante la STPS.</p>
+
+      <div class="flex gap-3">
+        <input id="folio-input" type="text" placeholder="Ej: PAC-26-K7M2XQ4B-R4"
+          class="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 font-mono" />
+        <button onclick="verify()" class="px-6 py-3 bg-violet-600 text-white font-medium rounded-xl hover:bg-violet-700 transition-colors text-sm whitespace-nowrap">
+          Verificar
+        </button>
+      </div>
+
+      <!-- divider -->
+      <div class="relative my-5">
+        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+        <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-4 text-slate-400 font-medium">o</span></div>
+      </div>
+
+      <!-- Camera button -->
+      <button id="cam-toggle-btn" onclick="toggleCamera()"
+        class="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-violet-400 hover:text-violet-600 hover:bg-violet-50 transition-all flex items-center justify-center gap-3 text-sm font-medium">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        Escanear QR con cámara
+      </button>
+
+      <!-- Camera preview container -->
+      <div id="cam-container" class="hidden mt-4">
+        <div class="rounded-xl overflow-hidden border border-slate-200 bg-black">
+          <div id="qr-reader" style="width:100%;"></div>
+        </div>
+        <p class="text-xs text-slate-400 text-center mt-2">Apunta la cámara al código QR del certificado</p>
+      </div>
+    </div>
+
+    <!-- Loading state (hidden by default) -->
+    <div id="state-loading" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+      <svg class="spin w-8 h-8 text-violet-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+      <p class="text-slate-600 text-sm font-medium">Verificando certificado...</p>
+    </div>
+
+    <!-- Valid result -->
+    <div id="state-valid" class="hidden fade-in">
+      <!-- Status badge -->
+      <div class="flex items-center justify-center gap-3 mb-5">
+        <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+          <svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-lg font-bold text-emerald-700">Certificado válido</p>
+          <p id="verify-timestamp" class="text-xs text-slate-400"></p>
+        </div>
+      </div>
+
+      <!-- Certificate preview -->
+      <div class="bg-white rounded-2xl border-2 border-emerald-200 shadow-sm overflow-hidden mb-5">
+        <!-- Certificate interior -->
+        <div class="cert-frame border-4 border-double border-slate-200 m-4 rounded-xl overflow-hidden">
+          <div class="gradient-header py-5 px-6 text-center">
+            <p class="text-purple-200 text-xs uppercase tracking-widest mb-0.5">Asociación Civil</p>
+            <h1 class="text-white text-xl font-bold">Pasitos Education A.C.</h1>
+          </div>
+          <div class="px-8 py-6 text-center">
+            <p class="text-slate-400 text-xs uppercase tracking-widest mb-2">Certifica que</p>
+            <h2 id="result-nombre" class="text-2xl font-bold text-slate-900 mb-1">—</h2>
+            <p class="text-slate-600 text-sm mb-1">ha concluido satisfactoriamente el programa de</p>
+            <h3 id="result-curso" class="text-lg font-bold text-violet-700 mb-5">—</h3>
+            <div class="flex justify-center gap-8 text-sm mb-6">
+              <div>
+                <p class="text-slate-400 text-xs mb-0.5">Calificación</p>
+                <p id="result-calific" class="text-xl font-bold text-slate-900">—</p>
+              </div>
+              <div>
+                <p class="text-slate-400 text-xs mb-0.5">Fecha de emisión</p>
+                <p id="result-emision" class="font-semibold text-slate-800">—</p>
+              </div>
+            </div>
+            <div class="flex justify-between items-end">
+              <div class="text-center">
+                <div class="w-28 border-b border-slate-300 mx-auto mb-1"></div>
+                <p class="text-xs font-medium text-slate-700">Karla Elizabeth Barba Gómez</p>
+                <p class="text-xs text-slate-400">Directora General</p>
+              </div>
+              <!-- QR icon -->
+              <div class="flex flex-col items-center">
+                <svg class="w-14 h-14 text-slate-800" viewBox="0 0 100 100" fill="currentColor">
+                  <rect x="10" y="10" width="30" height="30"/><rect x="15" y="15" width="20" height="20" fill="white"/>
+                  <rect x="20" y="20" width="10" height="10"/>
+                  <rect x="60" y="10" width="30" height="30"/><rect x="65" y="15" width="20" height="20" fill="white"/>
+                  <rect x="70" y="20" width="10" height="10"/>
+                  <rect x="10" y="60" width="30" height="30"/><rect x="15" y="65" width="20" height="20" fill="white"/>
+                  <rect x="20" y="70" width="10" height="10"/>
+                  <rect x="60" y="50" width="10" height="10"/><rect x="75" y="50" width="10" height="10"/>
+                  <rect x="60" y="65" width="10" height="10"/><rect x="70" y="75" width="10" height="10"/>
+                  <rect x="85" y="60" width="10" height="10"/><rect x="85" y="80" width="10" height="10"/>
+                </svg>
+              </div>
+              <div class="text-center">
+                <div class="w-28 border-b border-slate-300 mx-auto mb-1"></div>
+                <p class="text-xs font-medium text-slate-700">Carla Ko</p>
+                <p class="text-xs text-slate-400">Coordinación Académica</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-slate-100 px-6 py-2 flex items-center justify-between">
+            <p id="result-folio-footer" class="text-xs text-slate-400 font-mono">—</p>
+            <p class="text-xs text-slate-400">pasitosac.org/validar</p>
+          </div>
+        </div>
+
+        <!-- Data table -->
+        <div class="px-6 pb-6">
+          <div class="grid grid-cols-2 gap-3 text-sm">
+            <div class="bg-slate-50 rounded-xl p-3">
+              <p class="text-xs text-slate-400 mb-0.5">Folio oficial</p>
+              <p id="result-folio" class="font-mono font-semibold text-slate-800">—</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3">
+              <p class="text-xs text-slate-400 mb-0.5">Estado</p>
+              <p id="result-vigencia-badge" class="font-semibold text-emerald-700">✓ Vigente · DC-3 STPS</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3">
+              <p class="text-xs text-slate-400 mb-0.5">Emitido por</p>
+              <p class="font-medium text-slate-800">Pasitos Education &amp; Health A.C.</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3">
+              <p class="text-xs text-slate-400 mb-0.5">Calificación final</p>
+              <p id="result-calific-2" class="font-medium text-slate-800">—</p>
+            </div>
+            <div id="result-vencimiento-row" class="col-span-2 bg-slate-50 rounded-xl p-3 hidden">
+              <p class="text-xs text-slate-400 mb-0.5">Válido hasta</p>
+              <p id="result-vencimiento" class="font-medium text-slate-800">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issuer info -->
+      <!-- TODO ⚠: Verificar y actualizar nombre legal, correo, teléfono y dirección antes de producción -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4">
+        <div class="w-12 h-12 gradient-header rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-slate-900">Pasitos Education &amp; Health A.C.</p>
+          <!-- TODO ⚠: Confirmar correo y teléfono oficial -->
+          <p class="text-xs text-slate-500">info@pasitoseducation.com · +52 (33) 2780-5441</p>
+          <!-- TODO ⚠: Confirmar dirección oficial -->
+          <p class="text-xs text-slate-400 mt-0.5">Valle de los Molinos, Zapopan, Jalisco</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expired result (authentic but out of validity period) -->
+    <div id="state-expired" class="hidden fade-in">
+      <div class="flex items-center justify-center gap-3 mb-5">
+        <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+          <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-lg font-bold text-amber-700">Certificado vencido</p>
+          <p id="expired-timestamp" class="text-xs text-slate-400"></p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border-2 border-amber-200 shadow-sm overflow-hidden mb-5">
+        <!-- Amber notice banner -->
+        <div class="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-start gap-3">
+          <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          <div>
+            <p class="text-sm font-semibold text-amber-800">Este certificado ya no está vigente</p>
+            <p class="text-xs text-amber-700 mt-0.5">El certificado fue emitido legítimamente por Pasitos Education &amp; Health A.C. pero su período de vigencia ha concluido. El titular deberá renovar la constancia.</p>
+          </div>
+        </div>
+
+        <!-- Certificate data -->
+        <div class="px-6 py-5 space-y-3 text-sm">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Titular</span>
+            <span id="exp-nombre" class="font-semibold text-slate-800">—</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Programa</span>
+            <span id="exp-curso" class="font-semibold text-slate-800 text-right max-w-[60%]">—</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Folio</span>
+            <span id="exp-folio" class="font-mono text-slate-700">—</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Fecha de emisión</span>
+            <span id="exp-emision" class="text-slate-700">—</span>
+          </div>
+          <div class="flex justify-between border-t border-slate-100 pt-3">
+            <span class="text-amber-600 font-medium">Venció el</span>
+            <span id="exp-vencimiento" class="font-bold text-amber-700">—</span>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="resetVerify()" class="w-full py-2.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-200 transition-colors">
+        Verificar otro folio
+      </button>
+    </div>
+
+    <!-- Invalid result -->
+    <div id="state-invalid" class="hidden fade-in">
+      <div class="bg-white rounded-2xl border-2 border-red-200 shadow-sm p-8 text-center">
+        <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900 mb-2">Certificado no encontrado</h2>
+        <p id="result-error-msg" class="text-sm text-slate-500 mb-5">El folio ingresado no existe en nuestra base de datos o puede haber sido revocado. Si crees que es un error, comunícate con Pasitos Education A.C.</p>
+        <button onclick="resetVerify()" class="px-6 py-2.5 bg-slate-100 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-200 transition-colors">
+          Intentar con otro folio
+        </button>
+      </div>
+    </div>
+
+    <p class="text-center text-xs text-slate-400 mt-8">
+      Este servicio de verificación es operado por Pasitos Education A.C.<br/>
+      Para soporte escribir a <a href="mailto:info@pasitoseducation.com" class="text-violet-600 hover:underline">info@pasitoseducation.com</a>
+    </p>
+  </main>
+
+  <script>
+    // ── Helpers ──────────────────────────────────────────────────────────
+    function show(id) { document.getElementById(id).classList.remove('hidden'); }
+    function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // ── Camera / QR scanner ───────────────────────────────────────────────
+    let _scanner = null;
+    let _camOpen  = false;
+
+    async function toggleCamera() {
+      if (_camOpen) {
+        await stopCamera();
+      } else {
+        await startCamera();
+      }
+    }
+
+    async function startCamera() {
+      try {
+        show('cam-container');
+        _camOpen = true;
+        document.getElementById('cam-toggle-btn').innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          Cerrar cámara`;
+
+        _scanner = new Html5Qrcode('qr-reader');
+        await _scanner.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 260, height: 260 } },
+          _onQrSuccess,
+          () => {}   // ignore frame errors
+        );
+      } catch (err) {
+        _camOpen = false;
+        hide('cam-container');
+        _resetCamBtn();
+        alert('No se pudo acceder a la cámara. Verifica los permisos del navegador.');
+      }
+    }
+
+    async function stopCamera() {
+      if (_scanner) {
+        try { await _scanner.stop(); } catch (_) {}
+        _scanner = null;
+      }
+      _camOpen = false;
+      hide('cam-container');
+      _resetCamBtn();
+    }
+
+    function _resetCamBtn() {
+      document.getElementById('cam-toggle-btn').innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        Escanear QR con cámara`;
+    }
+
+    function _onQrSuccess(decodedText) {
+      // Accept either a full URL (?folio=PAC-...) or a bare folio string
+      let folio = decodedText.trim().toUpperCase();
+      try {
+        const url = new URL(decodedText);
+        const f = url.searchParams.get('folio');
+        if (f) folio = f.toUpperCase();
+      } catch (_) { /* not a URL — use raw text as folio */ }
+
+      stopCamera();
+      document.getElementById('folio-input').value = folio;
+      verify();
+    }
+
+    // ── Verify against real API ───────────────────────────────────────────
+    async function verify() {
+      const folio = document.getElementById('folio-input').value.trim().toUpperCase();
+      if (!folio) return;
+
+      hide('state-valid'); hide('state-invalid'); hide('state-expired');
+      show('state-loading');
+
+      try {
+        const res  = await fetch('/api/verify', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ folio }),
+        });
+        const data = await res.json();
+        hide('state-loading');
+
+        const fmtDate = d => {
+          if (!d) return '—';
+          const [y, m, day] = d.slice(0,10).split('-');
+          const MESES = ['enero','febrero','marzo','abril','mayo','junio',
+                         'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+          return `${+day} de ${MESES[+m-1]} de ${y}`;
+        };
+
+        const now = new Date();
+        const nowStr = `Verificado el ${now.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})} a las ${now.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})} hrs`;
+
+        if (data.valid) {
+          // ── VÁLIDO ───────────────────────────────────────────────────────
+          _setText('verify-timestamp', nowStr);
+          _setText('result-nombre',   data.nombre      || '—');
+          _setText('result-curso',    data.curso        || '—');
+          _setText('result-folio',    data.folio        || folio);
+          _setText('result-folio-footer', data.folio   || folio);
+          _setText('result-emision',  fmtDate(data.fecha_emision));
+          const cal = data.calificacion != null ? `${data.calificacion} / 10.0` : '—';
+          _setText('result-calific',  cal);
+          _setText('result-calific-2', cal);
+
+          // Vigencia badge + vencimiento row
+          const vigBadge = document.getElementById('result-vigencia-badge');
+          const vRow     = document.getElementById('result-vencimiento-row');
+          if (data.fecha_vencimiento) {
+            vigBadge.textContent  = '✓ Vigente · DC-3 STPS';
+            vigBadge.className    = 'font-semibold text-emerald-700';
+            _setText('result-vencimiento', `Válido hasta el ${fmtDate(data.fecha_vencimiento)}`);
+            vRow.classList.remove('hidden');
+          } else {
+            vigBadge.textContent  = '✓ Vigente · sin vencimiento';
+            vigBadge.className    = 'font-semibold text-emerald-700';
+            vRow.classList.add('hidden');
+          }
+          show('state-valid');
+
+        } else if (data.status === 'vencido') {
+          // ── VENCIDO (auténtico pero expirado) ────────────────────────────
+          _setText('expired-timestamp', nowStr);
+          _setText('exp-nombre',      data.nombre      || '—');
+          _setText('exp-curso',       data.curso        || '—');
+          _setText('exp-folio',       data.folio        || folio);
+          _setText('exp-emision',     fmtDate(data.fecha_emision));
+          _setText('exp-vencimiento', fmtDate(data.fecha_vencimiento));
+          show('state-expired');
+
+        } else {
+          // ── INVÁLIDO (no existe, adulterado, revocado) ───────────────────
+          _setText('result-error-msg', data.message || 'El folio no pudo ser verificado.');
+          show('state-invalid');
+        }
+      } catch (err) {
+        hide('state-loading');
+        _setText('result-error-msg', 'Error de conexión. Intenta de nuevo.');
+        show('state-invalid');
+      }
+    }
+
+    function _setText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+
+    function resetVerify() {
+      hide('state-valid'); hide('state-invalid'); hide('state-expired'); hide('state-loading');
+      document.getElementById('folio-input').value = '';
+      document.getElementById('folio-input').focus();
+    }
+
+    document.getElementById('folio-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') verify();
+    });
+
+    // ── Auto-fill folio from URL query param ?folio=PAC-... ───────────────
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const f = params.get('folio');
+      if (f) {
+        document.getElementById('folio-input').value = f.toUpperCase();
+        verify();
+      }
+    })();
+  </script>
+</body>
+</html>

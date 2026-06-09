@@ -1,0 +1,3507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pasitos Education & Health — Sistema de Certificados DC-3</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50:  '#fdf5ff',
+              100: '#fae8ff',
+              200: '#f5d0fe',
+              300: '#f0abfc',
+              400: '#e070f8',
+              500: '#c060f5',   /* logo purple */
+              600: '#a83dd8',
+              700: '#8e22bc',
+              800: '#73199a',
+              900: '#5e1680',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    .sidebar-link { transition: all 0.15s ease; }
+    .sidebar-link:hover, .sidebar-link.active { background: rgba(255,255,255,0.1); }
+    .sidebar-link.active { border-left: 3px solid #a78bfa; }
+    .modal-overlay { backdrop-filter: blur(4px); }
+    .fade-in { animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .card-hover { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .cert-badge-valid { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46; }
+    .cert-badge-pending { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; }
+    .cert-badge-revoked { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #991b1b; }
+    .qr-pulse { animation: qrPulse 1.5s ease-in-out infinite; }
+    @keyframes qrPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); } 50% { box-shadow: 0 0 0 12px rgba(59,130,246,0); } }
+    .gradient-header { background: #8e22bc; }
+    .stat-card { background: linear-gradient(135deg, var(--from), var(--to)); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+    .step-active { background: #2563eb; color: white; }
+    .step-done { background: #10b981; color: white; }
+    .step-pending { background: #e2e8f0; color: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- ═══════════════════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════════════════════ -->
+<div id="login-screen" class="min-h-screen flex">
+  <!-- Left panel - branding -->
+  <div class="hidden lg:flex lg:w-1/2 gradient-header flex-col justify-between p-12 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute top-20 left-20 w-64 h-64 rounded-full border-2 border-white"></div>
+      <div class="absolute top-40 left-40 w-96 h-96 rounded-full border border-white"></div>
+      <div class="absolute bottom-20 right-20 w-48 h-48 rounded-full border-2 border-white"></div>
+    </div>
+    <div class="relative">
+      <img src="/static/logo_white.webp" alt="Pasitos Education & Health"
+           class="w-auto mb-2" style="height:52px;" />
+    </div>
+    <div class="relative">
+      <h2 class="text-white text-4xl font-bold leading-tight mb-2">
+        Construyendo<br/>Futuros Brillantes
+      </h2>
+      <p class="text-purple-200 text-sm mb-8">Certificados DC-3 con validez STPS</p>
+      <div class="space-y-4">
+        <div class="flex items-center gap-3 text-purple-100">
+          <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422A12.083 12.083 0 0112 21a12.083 12.083 0 01-6.16-10.422L12 14z"/>
+            </svg>
+          </div>
+          <span class="text-sm">Formación certificada para la primera infancia</span>
+        </div>
+        <div class="flex items-center gap-3 text-purple-100">
+          <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <span class="text-sm">Firma electrónica y validación por QR</span>
+        </div>
+        <div class="flex items-center gap-3 text-purple-100">
+          <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <span class="text-sm">Datos encriptados · Almacenamiento seguro</span>
+        </div>
+        <div class="flex items-center gap-3 text-purple-100">
+          <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <span class="text-sm">Autorizada por la STPS · Registro DC-3</span>
+        </div>
+      </div>
+    </div>
+    <div class="relative text-purple-300 text-xs">
+      © 2026 Pasitos Education & Health A.C. · Zapopan, Jalisco
+    </div>
+  </div>
+
+  <!-- Right panel - login form -->
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
+    <div class="w-full max-w-md">
+      <!-- Mobile logo -->
+      <div class="lg:hidden mb-8">
+        <img src="/static/logo.webp" alt="Pasitos Education & Health" style="height:36px; width:auto;" />
+      </div>
+
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold text-slate-900 mb-2">Bienvenido</h2>
+        <p class="text-slate-500">Inicia sesión para continuar</p>
+      </div>
+
+      <form id="login-form" class="space-y-5">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Correo electrónico</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+              </svg>
+            </div>
+            <input type="email" id="login-email" placeholder="usuario@pasitos.com"
+              class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 bg-slate-50 transition-all"
+              value="admin@pasitos.com" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Contraseña</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+            </div>
+            <input type="password" id="login-password" placeholder="••••••••"
+              class="w-full pl-10 pr-12 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 bg-slate-50 transition-all"
+              value="Pasitos2026!" />
+            <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+            <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-brand-600" checked />
+            Recordar sesión
+          </label>
+          <a href="#" class="text-sm text-brand-600 hover:text-brand-700 font-medium">¿Olvidaste tu contraseña?</a>
+        </div>
+        <button type="submit"
+          class="w-full py-3 px-4 gradient-header text-white font-semibold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
+          <span>Iniciar sesión</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+        <p id="login-error" class="hidden text-center text-sm text-red-600 bg-red-50 py-2 px-4 rounded-lg">
+          Credenciales incorrectas. Intenta nuevamente.
+        </p>
+      </form>
+
+      <div class="mt-8 p-4 bg-violet-50 rounded-xl border border-violet-100">
+        <p class="text-xs text-violet-700 font-semibold mb-2">Usuarios del sistema</p>
+        <div class="space-y-1.5 text-xs text-violet-600">
+          <p><span class="font-medium">Admin:</span> admin@pasitos.com</p>
+          <p><span class="font-medium">Coordinador:</span> coordinador@pasitos.com</p>
+          <p><span class="font-medium">Capturista:</span> capturista@pasitos.com</p>
+          <p class="mt-2 text-violet-500">Contraseña para todos: <span class="font-mono font-medium text-violet-700">Pasitos2026!</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     APP SHELL
+════════════════════════════════════════════════════ -->
+<div id="app-shell" class="hidden min-h-screen flex">
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 min-h-screen gradient-header flex flex-col fixed left-0 top-0 z-30">
+    <!-- Logo -->
+    <div class="px-5 py-5 border-b border-white/10">
+      <img src="/static/logo_white.webp" alt="Pasitos Education & Health"
+           class="w-auto" style="height:44px;" />
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 p-4 space-y-1">
+      <p class="text-purple-300 text-xs font-semibold uppercase tracking-widest px-3 mb-3">Principal</p>
+      <a onclick="showView('dashboard')" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-white" style="border-left-color:#a78bfa">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v10zm0-10V5a2 2 0 012-2h6l2 2h6a2 2 0 012 2v2H3z"/>
+        </svg>
+        <span class="text-sm font-medium">Dashboard</span>
+      </a>
+      <a onclick="showView('students')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-purple-200 hover:text-white">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <span class="text-sm font-medium">Participantes</span>
+      </a>
+      <a onclick="showView('certificates')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-purple-200 hover:text-white">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <span class="text-sm font-medium">Certificados DC-3</span>
+        <span class="ml-auto bg-brand-500 text-white text-xs px-2 py-0.5 rounded-full">12</span>
+      </a>
+      <a onclick="showView('cursos')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-purple-200 hover:text-white">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+        <span class="text-sm font-medium">Cursos</span>
+      </a>
+      <a onclick="showView('qr')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-purple-200 hover:text-white">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+        </svg>
+        <span class="text-sm font-medium">Validar QR</span>
+      </a>
+
+      <p class="text-purple-300 text-xs font-semibold uppercase tracking-widest px-3 mb-3 mt-6">Administración</p>
+      <a onclick="showView('users')" id="nav-users" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-purple-200 hover:text-white">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <span class="text-sm font-medium">Usuarios</span>
+      </a>
+      <a onclick="showView('settings')" id="nav-settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-purple-200 hover:text-white">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span class="text-sm font-medium">Configuración</span>
+      </a>
+    </nav>
+
+    <!-- User info -->
+    <div class="p-4 border-t border-white/10">
+      <div class="flex items-center gap-3">
+        <div id="sidebar-user-initials" class="w-9 h-9 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+          KA
+        </div>
+        <div class="flex-1 min-w-0">
+          <p id="sidebar-user-name" class="text-white text-sm font-medium truncate">—</p>
+          <p id="sidebar-user-rol" class="text-purple-300 text-xs">—</p>
+        </div>
+        <button onclick="logout()" class="text-blue-300 hover:text-white transition-colors" title="Cerrar sesión">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="ml-64 flex-1 min-h-screen bg-slate-50" style="margin-left:16rem; flex:1; min-height:100vh; background:#f8fafc; width:calc(100% - 16rem);">
+
+    <!-- Top bar -->
+    <header class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-20">
+      <div>
+        <h1 id="page-title" class="text-lg font-bold text-slate-900">Dashboard</h1>
+        <p id="page-subtitle" class="text-xs text-slate-500">Resumen general del sistema</p>
+      </div>
+    </header>
+
+    <!-- ─── VIEW: DASHBOARD ─── -->
+    <div id="view-dashboard" class="p-8 fade-in" style="display:block">
+
+      <!-- KPI cards: 3 real metrics -->
+      <div class="grid grid-cols-3 gap-6 mb-8">
+
+        <!-- Alumnos registrados -->
+        <div class="card-hover bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-5">
+          <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-4xl font-bold text-slate-900" id="stat-participantes">—</p>
+            <p class="text-sm text-slate-500 mt-0.5">Alumnos registrados</p>
+          </div>
+        </div>
+
+        <!-- Certificados emitidos -->
+        <div class="card-hover bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-5">
+          <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-4xl font-bold text-slate-900" id="stat-emitidos">—</p>
+            <p class="text-sm text-slate-500 mt-0.5">Certificados emitidos</p>
+          </div>
+        </div>
+
+        <!-- Por emitir -->
+        <div class="card-hover bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-5">
+          <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-4xl font-bold text-slate-900" id="stat-pendientes">—</p>
+            <p class="text-sm text-slate-500 mt-0.5">Por emitir</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Main content row -->
+      <div class="grid grid-cols-3 gap-6">
+
+        <!-- Recent certificates (2 cols) -->
+        <div class="col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="font-semibold text-slate-900">Certificados recientes</h3>
+            <button onclick="showView('certificates')" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Ver todos →</button>
+          </div>
+          <div class="divide-y divide-slate-100 flex-1" id="recent-certs-list"></div>
+        </div>
+
+        <!-- Right column (1 col) -->
+        <div class="space-y-6">
+
+          <!-- Certificados por programa -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <h3 class="font-semibold text-slate-900 mb-5">Certificados emitidos por programa</h3>
+            <div class="space-y-4" id="programs-chart">
+              <p class="text-xs text-slate-400 text-center py-2">Cargando...</p>
+            </div>
+          </div>
+
+          <!-- Import data -->
+          <div data-min-rol="coordinador" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <h3 class="font-semibold text-slate-900 mb-1">Importar datos</h3>
+            <p class="text-xs text-slate-500 mb-4">Carga un archivo XLSX o CSV para registrar participantes y certificados en lote.</p>
+            <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="importFile(this)" />
+            <button onclick="document.getElementById('import-file-input').click()"
+                    class="w-full flex items-center justify-center gap-2 p-3 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors text-sm font-medium">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+              </svg>
+              <span id="import-btn-label">Importar XLSX / CSV</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /view-dashboard -->
+
+    <!-- ─── VIEW: STUDENTS ─── -->
+    <div id="view-students" class="p-8 fade-in" style="display:none">
+
+      <!-- Banner: participantes sin grupo asignado -->
+      <div id="students-no-group-banner" class="hidden mb-5 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
+        <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        <div>
+          <p class="text-sm font-semibold text-amber-800">Participantes sin grupo asignado</p>
+          <p class="text-xs text-amber-700 mt-0.5"><span id="students-no-group-count">0</span> participante(s) tienen al menos un certificado sin grupo. Ábrelos para asignar el grupo correspondiente.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 mb-6" style="flex-wrap:wrap;">
+        <button onclick="openParticipantModal()"
+          class="ml-auto flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Agregar participante
+        </button>
+      </div>
+      <div class="flex items-center gap-3 mb-6">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <input id="students-search" placeholder="Buscar por nombre..." class="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl bg-white w-64 transition-all" />
+        </div>
+        <select id="students-filter-cargo" class="text-sm border border-slate-200 rounded-xl bg-white px-3 py-2 text-slate-700">
+          <option value="">Todos los cargos</option>
+        </select>
+        <select id="students-filter-inst" class="text-sm border border-slate-200 rounded-xl bg-white px-3 py-2 text-slate-700">
+          <option value="">Todas las instituciones</option>
+        </select>
+        <button onclick="loadStudents(1)" class="text-xs text-slate-400 hover:text-slate-600 px-2 py-2" title="Limpiar filtros" id="students-clear-btn" style="display:none">
+          ✕ Limpiar
+        </button>
+      </div>
+      <!-- Note: filter options auto-populate from DB values (fed by CSV import) -->
+      <p class="text-xs text-slate-400 mb-4 -mt-2">
+        Los filtros se actualizan automáticamente al importar datos desde XLSX/CSV.
+      </p>
+
+      <!-- Participants table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-slate-100 bg-slate-50">
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Participante</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">CURP</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Institución</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Registro</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cargo</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Certs.</th>
+              <th class="px-6 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100" id="students-tbody">
+            <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">Cargando...</td></tr>
+          </tbody>
+        </table>
+        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+          <p class="text-sm text-slate-500" id="students-pagination-text">—</p>
+          <div id="students-pagination-btns" class="flex items-center gap-1"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── VIEW: CERTIFICATES ─── -->
+    <div id="view-certificates" class="p-8 fade-in" style="display:none">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <input id="certs-search" placeholder="Buscar por folio o nombre..." class="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl bg-white w-72" />
+        </div>
+        <select id="certs-filter-programa" class="text-sm border border-slate-200 rounded-xl bg-white px-3 py-2 text-slate-700">
+          <option value="">Todos los programas</option>
+        </select>
+        <button onclick="loadCertificates(1)" class="text-xs text-slate-400 hover:text-slate-600 px-2 py-2" title="Limpiar filtros" id="certs-clear-btn" style="display:none">
+          ✕ Limpiar
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-slate-100 bg-slate-50">
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Folio</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Participante</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Programa</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha emisión</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cal.</th>
+              <th class="px-6 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50" id="certs-tbody">
+            <tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">Cargando...</td></tr>
+          </tbody>
+        </table>
+        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+          <p class="text-sm text-slate-500" id="certs-pagination-text">—</p>
+          <div id="certs-pagination-btns" class="flex items-center gap-1"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── VIEW: QR VALIDATOR ─── -->
+    <!-- ─── VIEW: CURSOS ─── -->
+    <div id="view-cursos" class="p-8 fade-in" style="display:none">
+
+      <div class="flex items-center justify-between mb-6">
+        <div></div>
+        <div class="flex items-center gap-2">
+          <!-- "Agregar grupo" button (admin/coordinador) -->
+          <div id="add-group-bar" data-min-rol="coordinador" class="flex items-center gap-2">
+            <button onclick="openNewGroupFromHeader()"
+              class="flex items-center gap-2 px-4 py-2 border border-brand-500 text-brand-600 text-sm font-medium rounded-xl hover:bg-brand-50 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Agregar grupo
+            </button>
+          </div>
+          <button data-min-rol="coordinador" onclick="openModal('new-course-modal')"
+            class="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Nuevo curso
+          </button>
+        </div>
+      </div>
+
+      <div id="cursos-list" class="space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-400">Cargando...</div>
+      </div>
+    </div>
+
+    <div id="view-qr" class="p-8 fade-in" style="display:none">      <div class="max-w-xl mx-auto">
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mb-6">
+          <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+              </svg>
+            </div>
+            <h2 class="text-xl font-bold text-slate-900 mb-1">Validar certificado</h2>
+            <p class="text-sm text-slate-500">Ingresa el folio para verificar la autenticidad del certificado</p>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Folio del certificado</label>
+              <div class="flex gap-3">
+                <input id="qr-input" type="text" placeholder="Ej: PAC-26-K7M2XQ4B-R4"
+                  class="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 bg-slate-50"
+                  onkeydown="if(event.key==='Enter') validateQR()" />
+                <button onclick="validateQR()" class="px-6 py-3 bg-brand-600 text-white font-medium rounded-xl hover:bg-brand-700 transition-colors flex items-center gap-2">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                  Verificar
+                </button>
+              </div>
+            </div>
+            <div class="relative">
+              <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+              <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-4 text-slate-500 font-medium">o</span></div>
+            </div>
+            <button id="admin-cam-btn" onclick="toggleAdminCamera()"
+              class="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-brand-400 hover:text-brand-600 hover:bg-brand-50 transition-all flex items-center justify-center gap-3 text-sm font-medium">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              Usar cámara para escanear QR
+            </button>
+
+            <!-- Camera preview -->
+            <div id="admin-cam-container" class="hidden mt-1">
+              <div class="rounded-xl overflow-hidden border border-slate-200 bg-black">
+                <div id="admin-qr-reader" style="width:100%;"></div>
+              </div>
+              <p class="text-xs text-slate-400 text-center mt-2">Apunta la cámara al código QR del certificado</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result panel -->
+        <div id="qr-result" class="hidden rounded-2xl border-2 shadow-sm p-6 fade-in">
+          <div id="qr-result-inner"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ─── VIEW: USERS ─── -->
+    <div id="view-users" class="p-8 fade-in" style="display:none">
+      <div class="flex items-center justify-between mb-6">
+        <div></div>
+        <button onclick="openModal('new-user-modal')" class="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nuevo usuario
+        </button>
+      </div>
+
+      <!-- Role legend -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+          <div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-slate-900">Administrador</p>
+            <p class="text-xs text-slate-500">Acceso total al sistema</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-slate-900">Coordinador</p>
+            <p class="text-xs text-slate-500">Emite y gestiona certificados</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+          <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-slate-900">Capturista</p>
+            <p class="text-xs text-slate-500">Solo registra alumnos</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-slate-100 bg-slate-50">
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Usuario</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Rol</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
+              <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Registrado</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody" class="divide-y divide-slate-50">
+            <tr><td colspan="4" class="px-6 py-8 text-center text-sm text-slate-400">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── VIEW: SETTINGS ─── -->
+    <div id="view-settings" class="p-8 fade-in" style="display:none">
+      <div class="max-w-3xl space-y-6">
+
+        <!-- Organization -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <h3 class="font-semibold text-slate-900 mb-1 flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            Datos de la organización
+          </h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Nombre oficial</label>
+              <input value="Pasitos Education &amp; Health A.C." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800" />
+            </div>
+            <div>
+              <!-- RFC -->
+              <label class="block text-sm font-medium text-slate-700 mb-2">
+                RFC
+              </label>
+              <input value="PEA2018123ABC" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 font-mono text-slate-800" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">
+                Correo oficial
+              </label>
+              <input value="info@pasitoseducation.com" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">
+                Teléfono
+              </label>
+              <input value="+52 (33) 2780-5441" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800" />
+            </div>
+          </div>
+          <button class="mt-4 px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">Guardar cambios</button>
+        </div>
+
+        <!-- Security -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <h3 class="font-semibold text-slate-900 mb-5 flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Seguridad y cifrado
+          </h3>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+              <div>
+                <p class="text-sm font-medium text-slate-800">Cifrado AES-256-GCM</p>
+                <p class="text-xs text-slate-500">Datos sensibles (CURP, correo, fecha de nac.) almacenados cifrados</p>
+              </div>
+              <span class="text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-1">
+                <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div> Activo
+              </span>
+            </div>
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+              <div>
+                <p class="text-sm font-medium text-slate-800">Firma electrónica SHA-256</p>
+                <p class="text-xs text-slate-500">Hash único de integridad por certificado emitido</p>
+              </div>
+              <span class="text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-1">
+                <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div> Activo
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backups -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <h3 class="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            Respaldos
+          </h3>
+          <div class="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-600">
+            <svg class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p>La política de respaldos de la base de datos se configura a nivel de servidor (PostgreSQL). Coordina con tu equipo de infraestructura para programar backups automáticos y definir retención.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════════════ -->
+
+<!-- Overlay -->
+<div id="modal-overlay" class="hidden fixed inset-0 bg-black/50 modal-overlay z-40" onclick="closeAllModals()"></div>
+
+<!-- NEW CERTIFICATE MODAL (Multi-step) -->
+<div id="new-cert-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl fade-in">
+    <!-- Header -->
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-slate-900">Emitir nuevo certificado</h2>
+      <button onclick="closeAllModals()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <!-- Steps indicator -->
+    <div class="px-6 pt-5 flex items-center gap-2">
+      <div id="step1-ind" class="step-active w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all">1</div>
+      <div class="flex-1 h-1 bg-slate-200 rounded-full"><div id="step1-bar" class="h-full bg-brand-500 rounded-full w-0 transition-all"></div></div>
+      <div id="step2-ind" class="step-pending w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all">2</div>
+      <div class="flex-1 h-1 bg-slate-200 rounded-full"><div id="step2-bar" class="h-full bg-brand-500 rounded-full w-0 transition-all"></div></div>
+      <div id="step3-ind" class="step-pending w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all">3</div>
+    </div>
+    <div class="px-6 pb-2 flex justify-between text-xs text-slate-500 mt-1">
+      <span>Datos del alumno</span><span>Programa</span><span>Confirmar</span>
+    </div>
+
+    <!-- Step 1: Student data -->
+    <div id="cert-step-1" class="p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-slate-700 mb-2">Buscar alumno</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <input value="Luna Martínez García" class="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Nombre completo</label>
+          <input value="Luna Martínez García" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800" readonly />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">CURP</label>
+          <input value="MAGL950312MCSNRL05" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 font-mono text-slate-800" readonly />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Fecha de nacimiento</label>
+          <input value="12/03/1995" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800" readonly />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Municipio</label>
+          <input value="Ciudad de México" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800" readonly />
+        </div>
+      </div>
+      <div class="flex justify-end pt-2">
+        <button onclick="nextStep(2)" class="px-6 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors flex items-center gap-2">
+          Continuar <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Program -->
+    <div id="cert-step-2" class="p-6 space-y-4 hidden">
+      <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-slate-700 mb-2">Programa educativo</label>
+          <select class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800">
+            <option>Puericultura</option>
+            <option>Guardería Integral</option>
+            <option>Pasitos Bilingüe</option>
+            <option>Terapia de Lenguaje</option>
+            <option>Salud Visual</option>
+            <option>Salud Dental</option>
+            <option>Apoyo Psicosocial</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Fecha de inicio</label>
+          <input type="date" value="2024-03-01" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Fecha de egreso</label>
+          <input type="date" value="2026-05-14" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Calificación final</label>
+          <input value="9.8" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Firmante</label>
+          <select class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800">
+            <option>Karla E. Barba Gómez — Directora General</option>
+            <option>Carla Ko — Coordinación Académica</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-between pt-2">
+        <button onclick="nextStep(1)" class="px-5 py-2.5 border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> Atrás
+        </button>
+        <button onclick="nextStep(3)" class="px-6 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 flex items-center gap-2">
+          Continuar <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirm -->
+    <div id="cert-step-3" class="p-6 hidden">
+      <div class="bg-slate-50 rounded-xl p-5 mb-5">
+        <h4 class="text-sm font-semibold text-slate-700 mb-4">Resumen del certificado</h4>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div><p class="text-xs text-slate-500">Participante</p><p class="font-medium text-slate-800">María López Hernández</p></div>
+          <div><p class="text-xs text-slate-500">CURP</p><p class="font-mono font-medium text-slate-800 text-xs">LOHM900115MJCRRL05</p></div>
+          <div><p class="text-xs text-slate-500">Programa</p><p class="font-medium text-slate-800">Puericultura</p></div>
+          <div><p class="text-xs text-slate-500">Calificación</p><p class="font-medium text-slate-800">9.5 / 10</p></div>
+          <div><p class="text-xs text-slate-500">Fecha emisión</p><p class="font-medium text-slate-800">14 de mayo de 2026</p></div>
+          <div><p class="text-xs text-slate-500">Firmante</p><p class="font-medium text-slate-800">Karla E. Barba Gómez</p></div>
+        </div>
+      </div>
+      <div class="bg-blue-50 rounded-xl p-4 mb-5 flex items-start gap-3">
+        <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p class="text-xs text-blue-800">Al emitir, se generará automáticamente un folio único, firma digital SHA-256 y código QR de validación. Esta acción no puede deshacerse.</p>
+      </div>
+      <div class="flex justify-between">
+        <button onclick="nextStep(2)" class="px-5 py-2.5 border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> Atrás
+        </button>
+        <button onclick="emitCertificate()" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Emitir certificado
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CERTIFICATE PREVIEW MODAL -->
+<div id="cert-preview-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl fade-in">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-slate-900">Vista del certificado</h2>
+      <div class="flex items-center gap-2">
+        <button class="flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-700 text-sm rounded-xl hover:bg-slate-50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Descargar PDF
+        </button>
+        <button onclick="closeAllModals()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <!-- Certificate design — matches real DC-3 layout -->
+    <div class="p-6">
+      <div class="border-2 border-violet-200 rounded-2xl overflow-hidden bg-white shadow-inner">
+        <!-- Top ribbon + header -->
+        <div class="flex">
+          <!-- Left ribbon -->
+          <div class="gradient-header w-20 flex-shrink-0 flex flex-col items-center justify-center py-6 px-2">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <p class="text-white text-center text-xs font-bold leading-tight uppercase">Capacitación que transforma vidas</p>
+          </div>
+          <!-- Main content -->
+          <div class="flex-1 p-6">
+            <!-- Header row -->
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <h1 class="text-3xl font-black text-violet-600 leading-none tracking-tight">Pasitos<span class="text-violet-400">®</span></h1>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Education & Health A.C.</p>
+                <p class="text-xs text-slate-400 mt-0.5">Autorizada por la Secretaría de Trabajo y Previsión Social</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">No. de Certificado</p>
+                <div class="border-2 border-violet-400 rounded-lg px-3 py-1 inline-block">
+                  <p class="font-mono font-bold text-violet-700 text-sm">PAC-2026-1084</p>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 flex items-center justify-end gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  Emitido el 14 de mayo de 2026
+                </p>
+                <p class="text-xs text-slate-400">Zapopan, Jalisco, México</p>
+              </div>
+            </div>
+            <!-- Title -->
+            <div class="text-center border-t border-b border-violet-100 py-3 mb-4">
+              <h2 class="text-lg font-black text-slate-900 uppercase tracking-wide">Certificado de Competencia Laboral</h2>
+              <div class="inline-block bg-violet-600 text-white text-xs font-bold px-4 py-1 rounded-full mt-1 uppercase tracking-widest">Con validez DC-3 conforme a la STPS</div>
+            </div>
+            <!-- Student -->
+            <div class="text-center mb-4">
+              <p class="text-slate-500 text-sm mb-1">Se certifica que:</p>
+              <h3 class="text-2xl font-black text-slate-900">María López Hernández</h3>
+              <p class="text-slate-400 text-xs font-mono mt-0.5">CURP: LOHM900115MJCRRL05</p>
+              <p class="text-violet-400 text-lg mt-1">♥</p>
+              <p class="text-slate-600 text-sm mt-1">Ha completado satisfactoriamente el programa de capacitación en:</p>
+              <h4 class="text-2xl font-black text-violet-600 uppercase mt-1">Puericultura</h4>
+              <p class="text-xs text-slate-400">Programa de Capacitación en Cuidado Infantil</p>
+              <p class="text-xs text-slate-400">Aprobado por la Secretaría de Previsión Social, Jalisco</p>
+            </div>
+            <!-- Signatures + DC3 box + QR -->
+            <div class="flex items-end justify-between gap-4">
+              <div class="text-center">
+                <p class="font-bold text-slate-700 text-sm italic mb-0.5" style="font-family: cursive">Karla Barba</p>
+                <div class="w-36 border-b border-violet-400 mb-1"></div>
+                <p class="text-xs font-semibold text-violet-700">Karla Elizabeth Barba Gómez</p>
+                <p class="text-xs text-slate-500 uppercase font-bold">Directora General</p>
+                <p class="text-xs text-slate-400">Pasitos Education & Health A.C.</p>
+              </div>
+              <div class="text-center">
+                <p class="font-bold text-slate-700 text-sm italic mb-0.5" style="font-family: cursive">Carla Ko</p>
+                <div class="w-36 border-b border-violet-400 mb-1"></div>
+                <p class="text-xs font-semibold text-violet-700">Carla Ko</p>
+                <p class="text-xs text-slate-500 uppercase font-bold">Coordinación Académica</p>
+                <p class="text-xs text-slate-400">Responsable de Capacitación</p>
+              </div>
+              <div class="flex flex-col items-center gap-2">
+                <!-- DC-3 box -->
+                <div class="border border-violet-300 rounded-lg p-2 text-center w-28">
+                  <div class="flex items-center gap-1 mb-1">
+                    <div class="w-6 h-6 bg-violet-600 rounded text-white flex items-center justify-center text-xs font-black">DC</div>
+                    <p class="text-xs font-bold text-violet-700">REGISTRO DC-3</p>
+                  </div>
+                  <p class="text-xs text-slate-500 leading-tight">Certifica conforme al Art. 153 LFT</p>
+                </div>
+                <!-- QR -->
+                <div class="flex flex-col items-center">
+                  <div class="w-16 h-16 bg-white border border-slate-300 rounded-lg flex items-center justify-center qr-pulse">
+                    <svg class="w-12 h-12 text-slate-800" viewBox="0 0 100 100" fill="currentColor">
+                      <rect x="10" y="10" width="30" height="30"/><rect x="15" y="15" width="20" height="20" fill="white"/><rect x="20" y="20" width="10" height="10"/>
+                      <rect x="60" y="10" width="30" height="30"/><rect x="65" y="15" width="20" height="20" fill="white"/><rect x="70" y="20" width="10" height="10"/>
+                      <rect x="10" y="60" width="30" height="30"/><rect x="15" y="65" width="20" height="20" fill="white"/><rect x="20" y="70" width="10" height="10"/>
+                      <rect x="60" y="50" width="10" height="10"/><rect x="75" y="50" width="10" height="10"/><rect x="60" y="65" width="10" height="10"/><rect x="70" y="75" width="10" height="10"/>
+                    </svg>
+                  </div>
+                  <p class="text-xs text-violet-600 font-medium mt-0.5">VER-0001</p>
+                  <p class="text-xs text-slate-400">pasitosac.org/certificados</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Footer -->
+        <div class="bg-violet-50 px-6 py-2 flex items-center justify-between border-t border-violet-100">
+          <p class="text-xs text-slate-400 font-mono">SHA-256: a3f4b1c9d8e2f5a6b7c8...</p>
+          <p class="text-xs text-violet-600 font-medium">www.pasitosac.org/certificados</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW STUDENT MODAL -->
+<div id="new-student-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg fade-in">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-slate-900">Registrar nuevo alumno</h2>
+      <button onclick="closeAllModals()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Nombre(s)</label>
+          <input placeholder="Luna" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 placeholder-slate-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Apellidos</label>
+          <input placeholder="Martínez García" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 placeholder-slate-400" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium text-slate-700 mb-2">CURP</label>
+          <input placeholder="18 caracteres" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 font-mono placeholder-slate-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Fecha de nacimiento</label>
+          <input type="date" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Programa</label>
+          <select class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50">
+            <option>Seleccionar...</option>
+            <option>Puericultura</option>
+            <option>Guardería Integral</option>
+            <option>Pasitos Bilingüe</option>
+            <option>Terapia de Lenguaje</option>
+            <option>Salud Visual</option>
+            <option>Salud Dental</option>
+            <option>Apoyo Psicosocial</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Correo electrónico</label>
+          <input type="email" placeholder="correo@ejemplo.com" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 placeholder-slate-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Teléfono</label>
+          <input placeholder="55 1234 5678" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 placeholder-slate-400" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button onclick="closeAllModals()" class="px-5 py-2.5 border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50">Cancelar</button>
+        <button class="px-6 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700">Guardar alumno</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW USER MODAL -->
+<div id="new-user-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md fade-in">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-slate-900">Nuevo usuario del sistema</h2>
+      <button onclick="closeAllModals()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Nombre completo</label>
+        <input placeholder="Nombre del usuario" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 placeholder-slate-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Correo electrónico</label>
+        <input type="email" placeholder="usuario@pasitos.edu.mx" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 placeholder-slate-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Rol</label>
+        <select class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50">
+          <option>Capturista</option>
+          <option>Coordinador</option>
+          <option>Administrador</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button onclick="closeAllModals()" class="px-5 py-2.5 border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50">Cancelar</button>
+        <button class="px-6 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700">Crear usuario</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT DETAIL MODAL -->
+<div id="student-detail-modal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl fade-in">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-slate-900">Expediente del alumno</h2>
+      <div class="flex items-center gap-2">
+        <button data-min-rol="coordinador" onclick="closeAllModals(); openModal('new-cert-modal')" class="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Nuevo certificado
+        </button>
+        <button onclick="closeAllModals()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="p-6">
+      <!-- Profile -->
+      <div class="flex items-start gap-5 mb-6 pb-6 border-b border-slate-100">
+        <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">LM</div>
+        <div class="flex-1">
+          <h3 class="text-xl font-bold text-slate-900">Luna Martínez García</h3>
+          <p class="text-sm text-slate-500 font-mono mt-0.5">CURP: MAGL950312MCSNRL05</p>
+          <div class="flex items-center gap-3 mt-2">
+            <span class="text-xs px-2.5 py-1 rounded-full font-medium bg-emerald-50 text-emerald-700">Activo</span>
+            <span class="text-xs text-slate-500">Educación Preescolar</span>
+            <span class="text-xs text-slate-500">·</span>
+            <span class="text-xs text-slate-500">Desde Mar 2024</span>
+          </div>
+        </div>
+      </div>
+      <!-- Info grid -->
+      <div class="grid grid-cols-3 gap-4 mb-6 text-sm">
+        <div><p class="text-xs text-slate-500 mb-1">Fecha de nacimiento</p><p class="font-medium text-slate-800">12/03/1995</p></div>
+        <div><p class="text-xs text-slate-500 mb-1">Correo</p><p class="font-medium text-slate-800 truncate">luna.garcia@email.com</p></div>
+        <div><p class="text-xs text-slate-500 mb-1">Teléfono</p><p class="font-medium text-slate-800">55 9876 5432</p></div>
+      </div>
+      <!-- Certificates list -->
+      <div>
+        <p class="text-sm font-semibold text-slate-700 mb-3">Certificados emitidos (3)</p>
+        <div class="space-y-2">
+          <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-slate-100 cursor-pointer transition-colors">
+            <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-slate-800">Educación Preescolar</p>
+              <p class="text-xs text-slate-500 font-mono">CERT-2026-1084</p>
+            </div>
+            <span class="cert-badge-valid text-xs px-2 py-0.5 rounded-full font-medium">Emitido</span>
+            <p class="text-xs text-slate-400">14 May 2026</p>
+          </div>
+          <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-slate-100 cursor-pointer transition-colors">
+            <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-slate-800">Alfabetización</p>
+              <p class="text-xs text-slate-500 font-mono">CERT-2024-0721</p>
+            </div>
+            <span class="cert-badge-valid text-xs px-2 py-0.5 rounded-full font-medium">Emitido</span>
+            <p class="text-xs text-slate-400">15 Jun 2024</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS TOAST -->
+<div id="success-toast" class="hidden fixed bottom-6 right-6 z-50 bg-white border border-emerald-200 rounded-2xl shadow-xl p-4 flex items-center gap-3 fade-in">
+  <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+  </div>
+  <div>
+    <p class="text-sm font-semibold text-slate-900" id="toast-title">Certificado DC-3 emitido</p>
+    <p class="text-xs text-slate-500" id="toast-desc">Folio PAC-2026-1085 generado exitosamente</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════ -->
+<script>
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-password').value.trim();
+    const errEl = document.getElementById('login-error');
+    errEl.classList.add('hidden');
+
+    try {
+      const res  = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-shell').classList.remove('hidden');
+        _applyUserUI(data.nombre, data.rol);
+        loadDashboard();
+      } else {
+        errEl.textContent = data.error || 'Credenciales incorrectas';
+        errEl.classList.remove('hidden');
+      }
+    } catch {
+      errEl.textContent = 'Error de conexión. ¿Está corriendo el servidor?';
+      errEl.classList.remove('hidden');
+    }
+  });
+
+  async function logout() {
+    await fetch('/api/logout', { method: 'POST' });
+    window._userRol = null;
+    document.getElementById('app-shell').classList.add('hidden');
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-error').classList.add('hidden');
+  }
+
+  // ── Role helpers ───────────────────────────────────────────────────────────
+  window._userRol = null;
+
+  const _ROL_LABELS = { admin: 'Administrador', coordinador: 'Coordinador', capturista: 'Capturista' };
+
+  function _applyUserUI(nombre, rol) {
+    window._userRol = rol;
+    const initials = (nombre || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+    document.getElementById('sidebar-user-initials').textContent = initials;
+    document.getElementById('sidebar-user-name').textContent     = nombre || '—';
+    document.getElementById('sidebar-user-rol').textContent      = _ROL_LABELS[rol] || rol;
+
+    // Admin-only nav items
+    const isAdmin = rol === 'admin';
+    document.getElementById('nav-users').style.display    = isAdmin ? '' : 'none';
+    document.getElementById('nav-settings').style.display = isAdmin ? '' : 'none';
+
+    // Coordinador+ action elements (hidden for capturista)
+    const isCoordPlus = ['admin', 'coordinador'].includes(rol);
+    document.querySelectorAll('[data-min-rol="coordinador"]').forEach(el => {
+      el.style.display = isCoordPlus ? '' : 'none';
+    });
+  }
+
+  function togglePassword() {
+    const p = document.getElementById('login-password');
+    p.type = p.type === 'password' ? 'text' : 'password';
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  const pageMeta = {
+    dashboard:    { title: 'Dashboard',                subtitle: 'Resumen general — Pasitos Education & Health A.C.' },
+    students:     { title: 'Participantes',            subtitle: 'Base de datos de participantes registrados' },
+    certificates: { title: 'Certificados DC-3',        subtitle: 'Gestión y emisión de certificados con validez STPS' },
+    cursos:       { title: 'Cursos',                   subtitle: 'Catálogo de programas y grupos por fecha' },
+    qr:           { title: 'Validar QR',               subtitle: 'Verificación de autenticidad de certificados' },
+    users:        { title: 'Usuarios del sistema',     subtitle: 'Gestión de accesos y permisos' },
+    settings:     { title: 'Configuración',            subtitle: 'Ajustes de seguridad y organización' },
+  };
+
+  function showView(name) {
+    ['dashboard','students','certificates','cursos','qr','users','settings'].forEach(v => {
+      const el = document.getElementById('view-' + v);
+      if (el) el.style.display = 'none';
+    });
+    const target = document.getElementById('view-' + name);
+    if (target) target.style.display = 'block';
+
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.sidebar-link').forEach(l => {
+      if (l.getAttribute('onclick') && l.getAttribute('onclick').includes("'" + name + "'")) {
+        l.classList.add('active');
+      }
+    });
+    const meta = pageMeta[name];
+    if (meta) {
+      document.getElementById('page-title').textContent = meta.title;
+      document.getElementById('page-subtitle').textContent = meta.subtitle;
+    }
+    closeAllModals();
+    if (name === 'dashboard')    loadDashboard();
+    if (name === 'students')     loadStudents(1);
+    if (name === 'certificates') loadCertificates(1);
+    if (name === 'users')        loadUsers();
+    if (name === 'cursos')       loadCursos();
+  }
+
+  // ── Modals ─────────────────────────────────────────────────────────────────
+  function openModal(id) {
+    document.getElementById('modal-overlay').classList.remove('hidden');
+    document.getElementById(id).classList.remove('hidden');
+  }
+
+  function closeAllModals() {
+    document.getElementById('modal-overlay').classList.add('hidden');
+    document.querySelectorAll('[id$="-modal"]').forEach(m => m.classList.add('hidden'));
+    resetSteps();
+  }
+
+  // ── Cert wizard ────────────────────────────────────────────────────────────
+  let currentStep = 1;
+
+  function resetSteps() {
+    currentStep = 1;
+    ['cert-step-1','cert-step-2','cert-step-3'].forEach((s,i) => {
+      document.getElementById(s) && (i===0
+        ? document.getElementById(s).classList.remove('hidden')
+        : document.getElementById(s).classList.add('hidden'));
+    });
+    document.getElementById('step1-ind') && setStepState(1);
+    document.getElementById('step1-bar').style.width = '0';
+    document.getElementById('step2-bar').style.width = '0';
+  }
+
+  function setStepState(step) {
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById('step' + i + '-ind');
+      if (!el) return;
+      el.className = 'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ';
+      if (i < step) el.className += 'step-done';
+      else if (i === step) el.className += 'step-active';
+      else el.className += 'step-pending';
+    }
+  }
+
+  function nextStep(step) {
+    ['cert-step-1','cert-step-2','cert-step-3'].forEach(s => {
+      document.getElementById(s) && document.getElementById(s).classList.add('hidden');
+    });
+    document.getElementById('cert-step-' + step).classList.remove('hidden');
+    currentStep = step;
+    setStepState(step);
+    document.getElementById('step1-bar').style.width = step >= 2 ? '100%' : '0';
+    document.getElementById('step2-bar').style.width = step >= 3 ? '100%' : '0';
+  }
+
+  function emitCertificate() {
+    closeAllModals();
+    const toast = document.getElementById('success-toast');
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 4000);
+  }
+
+  // ── Dashboard ──────────────────────────────────────────────────────────────
+  // Bar colours cycling for programs chart
+  const CHART_COLORS = [
+    'bg-brand-500', 'bg-emerald-500', 'bg-violet-500',
+    'bg-amber-500',  'bg-cyan-500',   'bg-rose-500',
+    'bg-indigo-500', 'bg-teal-500',
+  ];
+
+  async function loadDashboard() {
+    try {
+      const res  = await fetch('/api/stats');
+      if (!res.ok) return;
+      const data = await res.json();
+      document.getElementById('stat-participantes').textContent = data.participantes.toLocaleString('es-MX');
+      document.getElementById('stat-emitidos').textContent      = data.emitidos.toLocaleString('es-MX');
+      document.getElementById('stat-pendientes').textContent    = data.pendientes.toLocaleString('es-MX');
+
+      // Programs bar chart
+      const chart = document.getElementById('programs-chart');
+      if (data.programs && data.programs.length) {
+        const maxVal = data.programs_max || 1;
+        chart.innerHTML = data.programs.map((p, i) => {
+          const pct = maxVal > 0 ? Math.round((p.emitidos / maxVal) * 100) : 0;
+          const bar = CHART_COLORS[i % CHART_COLORS.length];
+          return `
+            <div data-code="${p.code}">
+              <div class="flex justify-between text-xs text-slate-600 mb-1.5">
+                <span class="truncate pr-2" title="${p.nombre}">${p.nombre}</span>
+                <span class="font-semibold text-slate-800 flex-shrink-0">${p.emitidos.toLocaleString('es-MX')}</span>
+              </div>
+              <div class="h-2 bg-slate-100 rounded-full">
+                <div class="h-2 ${bar} rounded-full transition-all duration-500" style="width:${pct}%"></div>
+              </div>
+            </div>`;
+        }).join('');
+      } else {
+        chart.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">Sin cursos registrados</p>';
+      }
+
+      // Recent certs: pull first 5 from /api/certificates
+      const cRes  = await fetch('/api/certificates?per_page=5');
+      const cData = await cRes.json();
+      const list  = document.getElementById('recent-certs-list');
+      const COLORS = ['from-blue-400 to-indigo-500','from-emerald-400 to-teal-500',
+                       'from-pink-400 to-rose-500','from-violet-400 to-purple-500',
+                       'from-orange-400 to-amber-500'];
+      list.innerHTML = cData.items.map((c, i) => {
+        const initials = (c.nombre || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+        const badgeClass = c.estado === 'emitido' ? 'cert-badge-valid' : c.estado === 'revocado' ? 'cert-badge-revoked' : 'cert-badge-pending';
+        const badgeText  = c.estado === 'emitido' ? 'Emitido' : c.estado === 'revocado' ? 'Revocado' : 'Pendiente';
+        return `
+          <div class="px-6 py-4 flex items-center gap-4 hover:bg-slate-50 transition-colors cursor-pointer">
+            <div class="w-10 h-10 bg-gradient-to-br ${COLORS[i % COLORS.length]} rounded-full flex items-center justify-center text-white text-sm font-semibold">${initials}</div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-slate-900">${c.nombre}</p>
+              <p class="text-xs text-slate-500">${c.curso} · Folio: ${c.folio}</p>
+            </div>
+            <div class="text-right">
+              <span class="${badgeClass} text-xs px-2.5 py-1 rounded-full font-medium">${badgeText}</span>
+              <p class="text-xs text-slate-400 mt-1">${c.fecha_emision}</p>
+            </div>
+          </div>`;
+      }).join('');
+    } catch (err) {
+      console.error('loadDashboard:', err);
+    }
+  }
+
+  // ── Shared pagination renderer ────────────────────────────────────────────
+  function renderPagination(btnContainerId, total, perPage, currentPage, loadFn) {
+    const totalPages = Math.ceil(total / perPage);
+    const el = document.getElementById(btnContainerId);
+    if (!el) return;
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+    const btn = (label, page, active) => {
+      if (active) return `<button class="px-3 py-1.5 text-sm bg-brand-600 text-white rounded-lg">${label}</button>`;
+      return `<button onclick="${loadFn}(${page})" class="px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50">${label}</button>`;
+    };
+    const pages = [...new Set([1, currentPage - 1, currentPage, currentPage + 1, totalPages])]
+      .filter(p => p >= 1 && p <= totalPages).sort((a,b) => a-b);
+    const parts = [];
+    if (currentPage > 1) parts.push(btn('← Anterior', currentPage - 1, false));
+    let prev = null;
+    for (const p of pages) {
+      if (prev !== null && p - prev > 1) parts.push('<span class="px-2 text-slate-400">···</span>');
+      parts.push(btn(p, p, p === currentPage));
+      prev = p;
+    }
+    if (currentPage < totalPages) parts.push(btn('Siguiente →', currentPage + 1, false));
+    el.innerHTML = parts.join('');
+  }
+
+  // ── Participants table ─────────────────────────────────────────────────────
+  let studentsPage = 1;
+  let _participantMap = {};  // keyed by participant id — avoids onclick quoting issues
+  const COLORS = ['from-blue-400 to-indigo-500','from-emerald-400 to-teal-500',
+                   'from-pink-400 to-rose-500','from-violet-400 to-purple-500',
+                   'from-orange-400 to-amber-500','from-cyan-400 to-sky-500'];
+
+  async function loadStudents(page) {
+    studentsPage = page || 1;
+    const q     = document.getElementById('students-search').value.trim();
+    const cargo = document.getElementById('students-filter-cargo').value;
+    const inst  = document.getElementById('students-filter-inst').value;
+    const params = new URLSearchParams({
+      page: studentsPage,
+      ...(q     && { q }),
+      ...(cargo && { cargo }),
+      ...(inst  && { institucion: inst }),
+    });
+    const url   = `/api/participants?${params}`;
+    const tbody = document.getElementById('students-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-slate-400">Cargando...</td></tr>';
+
+    // Show/hide clear button
+    const hasFilter = q || cargo || inst;
+    document.getElementById('students-clear-btn').style.display = hasFilter ? 'inline' : 'none';
+
+    try {
+      const res  = await fetch(url, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      // Populate filter dropdowns on first load (when no filters active)
+      if (!hasFilter) {
+        const cargoSel = document.getElementById('students-filter-cargo');
+        const instSel  = document.getElementById('students-filter-inst');
+        const selCargo = cargoSel.value;
+        const selInst  = instSel.value;
+        cargoSel.innerHTML = '<option value="">Todos los cargos</option>' +
+          (data.filter_cargos || []).map(c => `<option value="${c}">${c}</option>`).join('');
+        instSel.innerHTML  = '<option value="">Todas las instituciones</option>' +
+          (data.filter_instituciones || []).map(i => `<option value="${i}">${i}</option>`).join('');
+        cargoSel.value = selCargo;
+        instSel.value  = selInst;
+      }
+
+      if (!data.items || !data.items.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">Sin resultados</td></tr>';
+      } else {
+        _participantMap = {};
+        tbody.innerHTML = data.items.map((p, i) => {
+          _participantMap[p.id] = p;
+          const initials = (p.nombre || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+          const needsGroupBadge = p.needs_group
+            ? `<span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium ml-2">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                Sin grupo
+               </span>`
+            : '';
+          return `
+            <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="openParticipantDetail('${p.id}')">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 bg-gradient-to-br ${COLORS[i % COLORS.length]} rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">${initials}</div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-slate-900">${p.nombre}${needsGroupBadge}</p>
+                    <p class="text-xs text-slate-400 truncate">${p.correo || ''}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-xs text-slate-500 font-mono" title="${p.curp}">${p.curp ? p.curp.slice(0,4) + '••••••••••' + p.curp.slice(-4) : '—'}</td>
+              <td class="px-6 py-4 text-sm text-slate-700">${p.institucion || '—'}</td>
+              <td class="px-6 py-4 text-sm text-slate-500">${p.created_at ? p.created_at.slice(0,10) : '—'}</td>
+              <td class="px-6 py-4"><span class="text-xs px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700">${p.cargo || '—'}</span></td>
+              <td class="px-6 py-4 text-sm font-semibold text-slate-900">${p.certificados}</td>
+              <td class="px-6 py-4">
+                <button onclick="event.stopPropagation(); openParticipantDetail('${p.id}')"
+                  class="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-brand-700 border border-slate-200 hover:border-brand-400 px-2.5 py-1 rounded-lg transition-colors"
+                  title="Ver detalle">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  Ver
+                </button>
+              </td>
+            </tr>`;
+        }).join('');
+      }
+      const from = (studentsPage - 1) * data.per_page + 1;
+      const to   = Math.min(studentsPage * data.per_page, data.total);
+      document.getElementById('students-pagination-text').textContent =
+        `Mostrando ${from}–${to} de ${data.total} participantes`;
+      renderPagination('students-pagination-btns', data.total, data.per_page, studentsPage, 'loadStudents');
+
+      // Update no-group banner (count participants with needs_group in current page)
+      const noGroupCount = (data.items || []).filter(p => p.needs_group).length;
+      const banner = document.getElementById('students-no-group-banner');
+      if (noGroupCount > 0) {
+        document.getElementById('students-no-group-count').textContent = noGroupCount;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    } catch (err) {
+      console.error('loadStudents:', err);
+      tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-red-400">Error al cargar: ${err.message}</td></tr>`;
+    }
+  }
+
+  // Search + filter debounce
+  let studentsSearchTimer;
+  document.getElementById('students-search').addEventListener('input', function() {
+    clearTimeout(studentsSearchTimer);
+    studentsSearchTimer = setTimeout(() => loadStudents(1), 350);
+  });
+  document.getElementById('students-filter-cargo').addEventListener('change', () => loadStudents(1));
+  document.getElementById('students-filter-inst').addEventListener('change',  () => loadStudents(1));
+
+  // ── Certificates table ────────────────────────────────────────────────────
+  let certsPage = 1;
+
+  async function loadCertificates(page) {
+    certsPage = page || 1;
+    const q        = document.getElementById('certs-search').value.trim();
+    const programa = document.getElementById('certs-filter-programa').value;
+    const params   = new URLSearchParams({
+      page: certsPage,
+      ...(q        && { q }),
+      ...(programa && { programa }),
+    });
+    const url   = `/api/certificates?${params}`;
+    const tbody = document.getElementById('certs-tbody');
+    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">Cargando...</td></tr>';
+
+    const hasFilter = q || programa;
+    document.getElementById('certs-clear-btn').style.display = hasFilter ? 'inline' : 'none';
+
+    try {
+      const res  = await fetch(url, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      // Populate programa dropdown on first load
+      if (!hasFilter && data.filter_programas) {
+        const sel = document.getElementById('certs-filter-programa');
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">Todos los programas</option>' +
+          data.filter_programas.map(p => `<option value="${p.code}">${p.nombre}</option>`).join('');
+        sel.value = cur;
+      }
+
+      if (!data.items || !data.items.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">Sin resultados</td></tr>';
+      } else {
+        tbody.innerHTML = data.items.map(c => {
+          const badgeClass = c.estado === 'emitido' ? 'cert-badge-valid' : c.estado === 'revocado' ? 'cert-badge-revoked' : 'cert-badge-pending';
+          const badgeText  = c.estado === 'emitido' ? 'Emitido' : c.estado === 'revocado' ? 'Revocado' : 'Pendiente';
+          const pdfBtn = c.estado === 'emitido'
+            ? `<a href="/api/certificates/${c.id}/pdf" target="_blank"
+                  class="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700 border border-brand-200 hover:border-brand-400 px-2.5 py-1 rounded-lg transition-colors"
+                  title="Descargar certificado PDF">
+                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                         d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                 </svg>
+                 PDF
+               </a>`
+            : c.estado === 'pendiente' && ['admin','coordinador'].includes(window._userRol)
+            ? `<button onclick="openEditCertModal('${c.id}','${c.course_id||''}','${c.edition_id||''}','${c.calificacion||''}','${c.resultado}','${c.fecha_inicio||''}','${c.fecha_termino||''}')"
+                  class="inline-flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-700 border border-amber-200 hover:border-amber-400 px-2.5 py-1 rounded-lg transition-colors"
+                  title="Editar inscripción">
+                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                 </svg>
+                 Editar
+               </button>`
+            : `<span class="text-xs text-slate-300">—</span>`;
+          return `
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="px-6 py-4 font-mono text-sm text-brand-700 font-medium">${c.folio || '—'}</td>
+              <td class="px-6 py-4 text-sm font-medium text-slate-900">${c.nombre}</td>
+              <td class="px-6 py-4 text-sm text-slate-700">${c.curso}</td>
+              <td class="px-6 py-4 text-sm text-slate-600">${c.fecha_emision ? c.fecha_emision.slice(0,10) : '—'}</td>
+              <td class="px-6 py-4"><span class="${badgeClass} text-xs px-2.5 py-1 rounded-full font-medium">${badgeText}</span></td>
+              <td class="px-6 py-4 text-sm text-slate-700">${c.calificacion ?? '—'}</td>
+              <td class="px-6 py-4">${pdfBtn}</td>
+            </tr>`;
+        }).join('');
+      }
+      const from = (certsPage - 1) * data.per_page + 1;
+      const to   = Math.min(certsPage * data.per_page, data.total);
+      document.getElementById('certs-pagination-text').textContent =
+        `Mostrando ${from}–${to} de ${data.total} certificados`;
+      renderPagination('certs-pagination-btns', data.total, data.per_page, certsPage, 'loadCertificates');
+    } catch (err) {
+      console.error('loadCertificates:', err);
+      tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-sm text-red-400">Error al cargar datos: ${err.message}</td></tr>`;
+    }
+  }
+
+  let certsSearchTimer;
+  document.getElementById('certs-search').addEventListener('input', function() {
+    clearTimeout(certsSearchTimer);
+    certsSearchTimer = setTimeout(() => loadCertificates(1), 350);
+  });
+  document.getElementById('certs-filter-programa').addEventListener('change', () => loadCertificates(1));
+
+  // ── Users table ───────────────────────────────────────────────────────────
+  async function loadUsers() {
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-slate-400">Cargando...</td></tr>';
+    const ROL_BADGE = {
+      admin:       'bg-red-50 text-red-700',
+      coordinador: 'bg-blue-50 text-blue-700',
+      capturista:  'bg-slate-100 text-slate-700',
+    };
+    const U_COLORS = ['from-blue-400 to-indigo-500','from-emerald-400 to-teal-500',
+                      'from-pink-400 to-rose-500','from-violet-400 to-purple-500',
+                      'from-orange-400 to-amber-500'];
+    try {
+      const res  = await fetch('/api/users', { credentials: 'same-origin' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rows = await res.json();
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-slate-400">Sin usuarios registrados</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map((u, i) => {
+        const initials   = (u.nombre || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+        const badgeClass = ROL_BADGE[u.rol] || 'bg-slate-100 text-slate-700';
+        const rolLabel   = _ROL_LABELS[u.rol] || u.rol;
+        const activeBadge = u.estado === 'activo'
+          ? '<span class="text-xs px-2.5 py-1 rounded-full font-medium bg-emerald-50 text-emerald-700">Activo</span>'
+          : '<span class="text-xs px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-500">Inactivo</span>';
+        return `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-gradient-to-br ${U_COLORS[i % U_COLORS.length]} rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">${initials}</div>
+                <div>
+                  <p class="text-sm font-medium text-slate-900">${u.nombre}</p>
+                  <p class="text-xs text-slate-400">${u.email}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4"><span class="text-xs px-2.5 py-1 rounded-full font-medium ${badgeClass}">${rolLabel}</span></td>
+            <td class="px-6 py-4">${activeBadge}</td>
+            <td class="px-6 py-4 text-sm text-slate-500">${u.created_at}</td>
+          </tr>`;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-red-400">Error al cargar usuarios: ${err.message}</td></tr>`;
+    }
+  }
+
+  // ── Cursos ────────────────────────────────────────────────────────────────
+
+  let _coursesCache = {};   // id → course object for edition modal
+
+  async function loadCursos() {
+    const container = document.getElementById('cursos-list');
+    container.innerHTML = '<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-400">Cargando...</div>';
+    try {
+      const res  = await fetch('/api/courses', { credentials: 'same-origin' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rows = await res.json();
+      _coursesCache = {};
+      if (!rows.length) {
+        container.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-10 text-center">
+          <p class="text-slate-500 text-sm">No hay cursos registrados aún.</p>
+          <button onclick="openModal('new-course-modal')" class="mt-4 px-4 py-2 bg-brand-600 text-white text-sm rounded-xl hover:bg-brand-700">+ Nuevo curso</button>
+        </div>`;
+        return;
+      }
+      const MODAL_COLORS = ['bg-violet-50 text-violet-700','bg-blue-50 text-blue-700','bg-emerald-50 text-emerald-700',
+                            'bg-amber-50 text-amber-700','bg-rose-50 text-rose-700'];
+      container.innerHTML = rows.map((c, i) => {
+        _coursesCache[c.id] = c;
+        const badgeColor  = c.estado === 'Activo' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500';
+        const circleColor = MODAL_COLORS[i % MODAL_COLORS.length];
+        const canEdit     = window._userRol === 'admin' || window._userRol === 'coordinador';
+        const safeNombre  = (c.nombre || '').replace(/"/g, '&quot;');
+        const vigLabel    = c.vigencia_meses
+          ? `<span class="text-xs text-violet-600 font-medium">${c.vigencia_meses} meses de vigencia</span>`
+          : `<span class="text-xs text-slate-400">Sin vencimiento</span>`;
+        const gruposBtn   = '';
+        return `
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div class="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors cursor-pointer"
+               onclick="toggleEditions('${c.id}')">
+            <div class="w-10 h-10 rounded-xl ${circleColor} flex items-center justify-center font-bold text-sm flex-shrink-0">${c.code}</div>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-slate-900 text-sm truncate">${c.nombre}</p>
+              <p class="text-xs text-slate-400 mt-0.5">${c.horas} horas · ${c.modalidad} · ${vigLabel}</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+              <span class="text-xs font-medium ${badgeColor} px-2.5 py-1 rounded-full">${c.estado}</span>
+              <span class="text-xs text-slate-500">${c.inscritos} inscritos</span>
+              <span class="text-xs text-slate-400">${c.num_editions} grupo${c.num_editions !== 1 ? 's' : ''}</span>
+              ${canEdit ? `<button onclick="event.stopPropagation(); openVigenciaModal('${c.id}', '${safeNombre}', ${c.vigencia_meses || 'null'})"
+                class="text-xs px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">Vigencia</button>` : ''}
+              <svg id="chevron-${c.id}" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+          <div id="editions-${c.id}" class="hidden border-t border-slate-100 divide-y divide-slate-100">
+            <div class="px-6 py-4 text-center text-sm text-slate-400">Cargando grupos...</div>
+          </div>
+        </div>`;
+      }).join('');
+
+    } catch (err) {
+      container.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-red-400">Error al cargar: ${err.message}</div>`;
+    }
+  }
+
+  async function toggleEditions(courseId) {
+    const panel   = document.getElementById(`editions-${courseId}`);
+    const chevron = document.getElementById(`chevron-${courseId}`);
+    const isOpen  = !panel.classList.contains('hidden');
+    if (isOpen) {
+      panel.classList.add('hidden');
+      chevron.style.transform = '';
+      return;
+    }
+    panel.classList.remove('hidden');
+    chevron.style.transform = 'rotate(180deg)';
+    await refreshEditions(courseId);
+  }
+
+  async function refreshEditions(courseId) {
+    const panel    = document.getElementById(`editions-${courseId}`);
+    const canEdit  = window._userRol === 'admin' || window._userRol === 'coordinador';
+    panel.innerHTML = '<div class="px-6 py-4 text-center text-sm text-slate-400">Cargando...</div>';
+    try {
+      const res  = await fetch(`/api/courses/${courseId}/editions`, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const eds  = await res.json();
+      if (!eds.length) {
+        panel.innerHTML = '<div class="px-6 py-4 text-sm text-slate-400 text-center">Sin grupos registrados todavía.</div>';
+        return;
+      }
+      const fmtDate = d => {
+        if (!d) return '—';
+        const [y, m, day] = d.split('-');
+        const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        return `${+day} ${MESES[+m-1]} ${y}`;
+      };
+      panel.innerHTML = eds.map(e => {
+        const estadoBadge = e.estado === 'Activo'
+          ? '<span class="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium">Activo</span>'
+          : e.estado === 'Cerrado'
+          ? '<span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">Cerrado</span>'
+          : '<span class="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-medium">Cancelado</span>';
+        const cupoText = e.cupo ? `<span class="text-xs text-slate-400">${e.cupo} cupo</span>` : '';
+        const safeE = JSON.stringify(e).replace(/'/g, "\\'");
+        const editBtn = canEdit
+          ? `<button onclick='openEditEditionModal(${JSON.stringify(courseId)}, ${JSON.stringify(e)})'
+               class="text-xs px-2.5 py-1 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-50 transition-colors">Editar</button>
+             <button onclick="deleteEdition('${courseId}','${e.id}','${e.nombre.replace(/'/g,"\\'")}')"
+               class="text-xs px-2.5 py-1 border border-red-100 text-red-400 rounded-lg hover:bg-red-50 transition-colors">Borrar</button>`
+          : '';
+        return `
+        <div class="px-6 py-3 flex items-center gap-3 hover:bg-slate-50">
+          <div class="w-1.5 h-8 rounded-full bg-brand-200 flex-shrink-0"></div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-slate-800">${e.nombre}</p>
+            <p class="text-xs text-slate-400 mt-0.5">${fmtDate(e.fecha_inicio)} → ${fmtDate(e.fecha_termino)}</p>
+          </div>
+          ${cupoText}
+          ${estadoBadge}
+          ${editBtn}
+        </div>`;
+      }).join('');
+    } catch (err) {
+      panel.innerHTML = `<div class="px-6 py-4 text-sm text-red-400 text-center">Error: ${err.message}</div>`;
+    }
+  }
+
+  function openNewEditionModal(courseId, courseName, courseCode) {
+    document.getElementById('ned-course-id').value               = courseId;
+    document.getElementById('ned-course-label').textContent      = `${courseCode} · ${courseName}`;
+    document.getElementById('ned-course-row').classList.add('hidden');
+    document.getElementById('ned-edition-id').value              = '';
+    document.getElementById('ned-nombre').value  = '';
+    document.getElementById('ned-inicio').value  = '';
+    document.getElementById('ned-termino').value = '';
+    document.getElementById('ned-cupo').value    = '';
+    document.getElementById('ned-estado').value  = 'Activo';
+    document.getElementById('ned-error').textContent = '';
+    document.getElementById('ned-save-btn').textContent = 'Guardar grupo';
+    document.querySelector('#new-edition-modal h2').textContent = 'Nuevo grupo';
+    openModal('new-edition-modal');
+  }
+
+  function openNewGroupFromHeader() {
+    // Show course selector inside the modal
+    document.getElementById('ned-course-id').value          = '';
+    document.getElementById('ned-course-label').textContent = '';
+    document.getElementById('ned-edition-id').value         = '';
+    document.getElementById('ned-nombre').value  = '';
+    document.getElementById('ned-inicio').value  = '';
+    document.getElementById('ned-termino').value = '';
+    document.getElementById('ned-cupo').value    = '';
+    document.getElementById('ned-estado').value  = 'Activo';
+    document.getElementById('ned-error').textContent = '';
+    document.getElementById('ned-save-btn').textContent = 'Guardar grupo';
+    document.querySelector('#new-edition-modal h2').textContent = 'Nuevo grupo';
+
+    const row = document.getElementById('ned-course-row');
+    const sel = document.getElementById('ned-course-sel');
+    row.classList.remove('hidden');
+    sel.innerHTML = '<option value="">— Selecciona un curso —</option>';
+    Object.values(_coursesCache || {})
+      .filter(c => c.estado === 'Activo')
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+      .forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.dataset.code   = c.code;
+        opt.dataset.nombre = c.nombre;
+        opt.textContent    = `${c.nombre} (${c.code})`;
+        sel.appendChild(opt);
+      });
+
+    // When course changes, update hidden input + label
+    sel.onchange = () => {
+      const opt = sel.options[sel.selectedIndex];
+      document.getElementById('ned-course-id').value          = opt.value || '';
+      document.getElementById('ned-course-label').textContent = opt.value
+        ? `${opt.dataset.code} · ${opt.dataset.nombre}` : '';
+    };
+
+    openModal('new-edition-modal');
+  }
+
+  function openEditEditionModal(courseId, e) {
+    document.getElementById('ned-course-id').value          = courseId;
+    document.getElementById('ned-course-label').textContent = e.nombre;
+    document.getElementById('ned-edition-id').value         = e.id;
+    document.getElementById('ned-nombre').value  = e.nombre;
+    document.getElementById('ned-inicio').value  = e.fecha_inicio;
+    document.getElementById('ned-termino').value = e.fecha_termino;
+    document.getElementById('ned-cupo').value    = e.cupo || '';
+    document.getElementById('ned-estado').value  = e.estado || 'Activo';
+    document.getElementById('ned-error').textContent = '';
+    document.getElementById('ned-save-btn').textContent = 'Guardar cambios';
+    document.querySelector('#new-edition-modal h2').textContent = 'Editar grupo';
+    openModal('new-edition-modal');
+  }
+
+  async function deleteEdition(courseId, editionId, nombre) {
+    if (!confirm(`¿Borrar el grupo "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    try {
+      const res  = await fetch(`/api/courses/${courseId}/editions/${editionId}`, {
+        method: 'DELETE', credentials: 'same-origin',
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Error al borrar'); return; }
+      showToast('Grupo eliminado', false);
+      await refreshEditions(courseId);
+      loadCursos();
+    } catch (err) {
+      alert('Error de conexión');
+    }
+  }
+
+  async function submitNewCourse() {
+    const btn = document.getElementById('nc-save-btn');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    document.getElementById('nc-error').textContent = '';
+    const payload = {
+      code:           document.getElementById('nc-code').value.trim(),
+      nombre:         document.getElementById('nc-nombre').value.trim(),
+      horas:          document.getElementById('nc-horas').value,
+      modalidad:      document.getElementById('nc-modalidad').value,
+      vigencia_meses: document.getElementById('nc-vigencia').value || null,
+    };
+    try {
+      const res  = await fetch('/api/courses', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('nc-error').textContent = data.error || 'Error desconocido';
+        return;
+      }
+      closeAllModals();
+      showToast(`Curso "${data.nombre}" creado correctamente`, false);
+      loadCursos();
+    } catch (err) {
+      document.getElementById('nc-error').textContent = 'Error de conexión';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Guardar';
+    }
+  }
+
+  async function submitNewEdition() {
+    const btn       = document.getElementById('ned-save-btn');
+    btn.disabled    = true; btn.textContent = 'Guardando...';
+    document.getElementById('ned-error').textContent = '';
+    const courseId  = document.getElementById('ned-course-id').value;
+    if (!courseId) {
+      document.getElementById('ned-error').textContent = 'Selecciona un curso.';
+      btn.disabled = false; btn.textContent = 'Guardar grupo';
+      return;
+    }
+    const editionId = document.getElementById('ned-edition-id').value;
+    const payload   = {
+      nombre:        document.getElementById('ned-nombre').value.trim(),
+      fecha_inicio:  document.getElementById('ned-inicio').value,
+      fecha_termino: document.getElementById('ned-termino').value,
+      cupo:          document.getElementById('ned-cupo').value || null,
+      estado:        document.getElementById('ned-estado').value,
+    };
+    if (payload.fecha_termino < payload.fecha_inicio) {
+      document.getElementById('ned-error').textContent = 'La fecha de término debe ser igual o posterior al inicio.';
+      btn.disabled = false; btn.textContent = editionId ? 'Guardar cambios' : 'Guardar grupo';
+      return;
+    }
+    try {
+      const url    = editionId
+        ? `/api/courses/${courseId}/editions/${editionId}`
+        : `/api/courses/${courseId}/editions`;
+      const method = editionId ? 'PUT' : 'POST';
+      const res    = await fetch(url, {
+        method, credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('ned-error').textContent = data.error || 'Error desconocido';
+        return;
+      }
+      closeAllModals();
+      showToast(editionId ? 'Grupo actualizado' : `Grupo "${data.nombre || payload.nombre}" creado`, false);
+      const panel = document.getElementById(`editions-${courseId}`);
+      if (panel && !panel.classList.contains('hidden')) await refreshEditions(courseId);
+      loadCursos();
+    } catch (err) {
+      document.getElementById('ned-error').textContent = 'Error de conexión';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = document.getElementById('ned-edition-id').value ? 'Guardar cambios' : 'Guardar grupo';
+    }
+  }
+
+  // ── Groups viewer modal ───────────────────────────────────────────────────
+
+  async function openGroupsModal(courseId, courseName, courseCode) {
+    document.getElementById('gm-course-id').value           = courseId;
+    document.getElementById('gm-course-label').textContent  = `${courseCode} · ${courseName}`;
+    document.getElementById('gm-add-btn').style.display     =
+      (window._userRol === 'admin' || window._userRol === 'coordinador') ? '' : 'none';
+    const list = document.getElementById('gm-list');
+    list.innerHTML = '<div class="p-6 text-center text-sm text-slate-400">Cargando...</div>';
+    openModal('groups-modal');
+    try {
+      const res = await fetch(`/api/courses/${courseId}/editions`, { credentials: 'same-origin' });
+      const eds = await res.json();
+      if (!eds.length) {
+        list.innerHTML = '<div class="p-6 text-center text-sm text-slate-400">Sin grupos registrados todavía.</div>';
+        return;
+      }
+      const fmtDate = d => {
+        if (!d) return '—';
+        const [y, m, day] = d.split('-');
+        const M = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        return `${+day} ${M[+m-1]} ${y}`;
+      };
+      list.innerHTML = eds.map(e => {
+        const st = e.estado === 'Activo'
+          ? '<span class="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Activo</span>'
+          : '<span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">' + e.estado + '</span>';
+        const cupo = e.cupo ? `<span class="text-xs text-slate-400">Cupo: ${e.cupo}</span>` : '';
+        return `<div class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-xl">
+          <div class="w-1.5 h-8 rounded-full bg-brand-200 flex-shrink-0"></div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-slate-800">${e.nombre}</p>
+            <p class="text-xs text-slate-400">${fmtDate(e.fecha_inicio)} → ${fmtDate(e.fecha_termino)}</p>
+          </div>
+          ${cupo}
+          ${st}
+        </div>`;
+      }).join('');
+    } catch (err) {
+      list.innerHTML = `<div class="p-6 text-center text-sm text-red-400">Error: ${err.message}</div>`;
+    }
+  }
+
+  function _gmAddGroup() {
+    const courseId = document.getElementById('gm-course-id').value;
+    const label    = document.getElementById('gm-course-label').textContent;
+    const [code, ...rest] = label.split(' · ');
+    const name = rest.join(' · ');
+    closeAllModals();
+    openNewEditionModal(courseId, name, code);
+  }
+
+  function openVigenciaModal(courseId, courseName, currentMeses) {
+    document.getElementById('vig-course-id').value         = courseId;
+    document.getElementById('vig-course-label').textContent = courseName;
+    document.getElementById('vig-meses').value             = currentMeses || '';
+    document.getElementById('vig-error').textContent       = '';
+    openModal('vigencia-modal');
+  }
+
+  async function submitVigencia() {
+    const btn      = document.getElementById('vig-save-btn');
+    btn.disabled   = true; btn.textContent = 'Guardando...';
+    document.getElementById('vig-error').textContent = '';
+    const courseId = document.getElementById('vig-course-id').value;
+    const meses    = document.getElementById('vig-meses').value || null;
+    try {
+      const res  = await fetch(`/api/courses/${courseId}`, {
+        method: 'PUT', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vigencia_meses: meses }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('vig-error').textContent = data.error || 'Error desconocido';
+        return;
+      }
+      closeAllModals();
+      showToast(meses ? `Vigencia actualizada: ${meses} meses` : 'Vigencia eliminada (sin vencimiento)', false);
+      loadCursos();
+    } catch (err) {
+      document.getElementById('vig-error').textContent = 'Error de conexión';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Guardar';
+    }
+  }
+
+  // ── QR Validator ──────────────────────────────────────────────────────────
+  async function validateQR() {
+    const folio   = document.getElementById('qr-input').value.trim();
+    const panel   = document.getElementById('qr-result');
+    const inner   = document.getElementById('qr-result-inner');
+    if (!folio) return;
+
+    panel.className = 'rounded-2xl border-2 shadow-sm p-6 fade-in bg-slate-50 border-slate-200';
+    inner.innerHTML = '<p class="text-sm text-slate-500 text-center py-4">Verificando...</p>';
+    panel.classList.remove('hidden');
+
+    try {
+      const res  = await fetch('/api/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folio }),
+      });
+      const data = await res.json();
+
+      if (data.valid) {
+        panel.className = 'rounded-2xl border-2 border-emerald-200 shadow-sm p-6 fade-in bg-white';
+        inner.innerHTML = `
+          <div class="flex items-start gap-4">
+            <div class="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">CERTIFICADO VÁLIDO</span>
+                <span class="text-xs text-slate-500">Verificado ${new Date().toLocaleString('es-MX')}</span>
+              </div>
+              <h3 class="text-xl font-bold text-slate-900 mb-4">${data.nombre}</h3>
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div><p class="text-slate-500 text-xs uppercase tracking-wide mb-1">Folio</p><p class="font-mono font-medium text-slate-800">${data.folio}</p></div>
+                <div><p class="text-slate-500 text-xs uppercase tracking-wide mb-1">Programa</p><p class="font-medium text-slate-800">${data.curso}</p></div>
+                <div><p class="text-slate-500 text-xs uppercase tracking-wide mb-1">Calificación</p><p class="font-medium text-slate-800">${data.calificacion ?? '—'}</p></div>
+                <div><p class="text-slate-500 text-xs uppercase tracking-wide mb-1">Fecha de emisión</p><p class="font-medium text-slate-800">${data.fecha_emision}</p></div>
+                <div><p class="text-slate-500 text-xs uppercase tracking-wide mb-1">Estado</p><p class="font-medium text-slate-800">${data.estado}</p></div>
+                <div><p class="text-slate-500 text-xs uppercase tracking-wide mb-1">Emitido por</p><p class="font-medium text-slate-800">Pasitos Education & Health A.C.</p></div>
+              </div>
+            </div>
+          </div>`;
+      } else {
+        const isTampered = data.status === 'tampered';
+        panel.className = `rounded-2xl border-2 ${isTampered ? 'border-red-400' : 'border-amber-200'} shadow-sm p-6 fade-in bg-white`;
+        inner.innerHTML = `
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 ${isTampered ? 'bg-red-50' : 'bg-amber-50'} rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg class="w-8 h-8 ${isTampered ? 'text-red-500' : 'text-amber-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="font-bold text-slate-900 mb-1">${isTampered ? '⚠ INTEGRIDAD COMPROMETIDA' : 'Certificado no válido'}</p>
+              <p class="text-sm text-slate-600">${data.message}</p>
+            </div>
+          </div>`;
+      }
+    } catch {
+      panel.className = 'rounded-2xl border-2 border-red-200 shadow-sm p-6 fade-in bg-white';
+      inner.innerHTML = '<p class="text-sm text-red-600 text-center">Error de conexión con el servidor.</p>';
+    }
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  document.getElementById('qr-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') validateQR();
+  });
+
+  // ── Admin QR camera scanner ────────────────────────────────────────────────
+  let _adminScanner = null;
+  let _adminCamOpen = false;
+
+  async function toggleAdminCamera() {
+    if (_adminCamOpen) {
+      await stopAdminCamera();
+    } else {
+      await startAdminCamera();
+    }
+  }
+
+  async function startAdminCamera() {
+    try {
+      document.getElementById('admin-cam-container').classList.remove('hidden');
+      _adminCamOpen = true;
+      document.getElementById('admin-cam-btn').innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Cerrar cámara`;
+
+      _adminScanner = new Html5Qrcode('admin-qr-reader');
+      await _adminScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 260, height: 260 } },
+        _onAdminQrSuccess,
+        () => {}
+      );
+    } catch (err) {
+      _adminCamOpen = false;
+      document.getElementById('admin-cam-container').classList.add('hidden');
+      _resetAdminCamBtn();
+      alert('No se pudo acceder a la cámara. Verifica los permisos del navegador.');
+    }
+  }
+
+  async function stopAdminCamera() {
+    if (_adminScanner) {
+      try { await _adminScanner.stop(); } catch (_) {}
+      _adminScanner = null;
+    }
+    _adminCamOpen = false;
+    document.getElementById('admin-cam-container').classList.add('hidden');
+    _resetAdminCamBtn();
+  }
+
+  function _resetAdminCamBtn() {
+    document.getElementById('admin-cam-btn').innerHTML = `
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      Usar cámara para escanear QR`;
+  }
+
+  function _onAdminQrSuccess(decodedText) {
+    let folio = decodedText.trim().toUpperCase();
+    try {
+      const url = new URL(decodedText);
+      const f = url.searchParams.get('folio');
+      if (f) folio = f.toUpperCase();
+    } catch (_) {}
+
+    stopAdminCamera();
+    document.getElementById('qr-input').value = folio;
+    validateQR();
+  }
+
+  // Stop camera when switching away from the QR tab
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.addEventListener('click', () => {
+      if (_adminCamOpen) stopAdminCamera();
+    });
+  });
+
+  // ── Import ────────────────────────────────────────────────────────────────
+  async function importFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const label = document.getElementById('import-btn-label');
+    label.textContent = 'Importando...';
+
+    const form = new FormData();
+    form.append('file', file);
+
+    try {
+      const res  = await fetch('/api/import', { method: 'POST', body: form });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Importación completa: ${data.participants} participantes, ${data.certificates} inscripciones (todas como Pendiente)`);
+        loadDashboard();
+      } else {
+        showToast('Error: ' + (data.error || 'Fallo en la importación'), true);
+      }
+    } catch {
+      showToast('Error de conexión', true);
+    } finally {
+      label.textContent = 'Importar XLSX / CSV';
+      input.value = '';
+    }
+  }
+
+  function showToast(msg, isError = false) {
+    const toast = document.getElementById('success-toast');
+    const msgEl = toast.querySelector('p');
+    if (msgEl) msgEl.textContent = msg;
+    toast.classList.remove('hidden');
+    if (isError) toast.classList.add('bg-red-50');
+    else toast.classList.remove('bg-red-50');
+    setTimeout(() => toast.classList.add('hidden'), 5000);
+  }
+
+  // ── Add Participant Modal ──────────────────────────────────────────────────
+  function openParticipantModal() {
+    _pStep(1);
+    document.getElementById('pm-form-p').reset();
+    document.getElementById('pm-form-e').reset();
+    document.getElementById('pm-participant-id').value = '';
+    document.getElementById('pm-error').textContent = '';
+    document.getElementById('pm-enroll-error').textContent = '';
+    document.getElementById('pm-success').classList.add('hidden');
+    document.getElementById('pm-modal').classList.remove('hidden');
+  }
+
+  function closeParticipantModal() {
+    document.getElementById('pm-modal').classList.add('hidden');
+  }
+
+  function _pStep(n) {
+    document.getElementById('pm-step1').classList.toggle('hidden', n !== 1);
+    document.getElementById('pm-step2').classList.toggle('hidden', n !== 2);
+    document.getElementById('pm-dot1').className = n === 1
+      ? 'w-2.5 h-2.5 rounded-full bg-brand-600'
+      : 'w-2.5 h-2.5 rounded-full bg-brand-200';
+    document.getElementById('pm-dot2').className = n === 2
+      ? 'w-2.5 h-2.5 rounded-full bg-brand-600'
+      : 'w-2.5 h-2.5 rounded-full bg-brand-200';
+  }
+
+  async function submitParticipant() {
+    const btn = document.getElementById('pm-save-btn');
+    const err = document.getElementById('pm-error');
+    err.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Guardando…';
+
+    const payload = {
+      nombre:      document.getElementById('pm-nombre').value.trim(),
+      curp:        document.getElementById('pm-curp').value.trim().toUpperCase(),
+      fecha_nac:   document.getElementById('pm-fecha-nac').value || null,
+      correo:      document.getElementById('pm-correo').value.trim() || null,
+      institucion: document.getElementById('pm-institucion').value.trim() || 'N/A',
+      cargo:       document.getElementById('pm-cargo').value.trim() || 'N/A',
+    };
+
+    try {
+      const res  = await fetch('/api/participants', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+        credentials: 'same-origin',
+      });
+      const data = await res.json();
+
+      if (res.status === 409) {
+        // Already exists — find them and proceed to step 2 as if just created
+        const listRes = await fetch(
+          `/api/participants?q=${encodeURIComponent(payload.nombre)}&per_page=5`,
+          { credentials: 'same-origin' }
+        );
+        const listData = await listRes.json();
+        const match = (listData.items || []).find(
+          p => p.curp && p.curp.toUpperCase() === payload.curp.toUpperCase()
+        );
+        if (match) {
+          document.getElementById('pm-participant-id').value = match.id;
+          document.getElementById('pm-created-name').textContent = match.nombre;
+          document.getElementById('pm-step2-wrapper').classList.remove('hidden');
+          _pStep(2);
+          const sel = document.getElementById('pm-course');
+          sel.innerHTML = '<option value="">— Sin inscribir por ahora —</option>';
+          document.getElementById('pm-edition').innerHTML = '<option value="">— Sin edición —</option>';
+          document.getElementById('pm-fecha-inicio').value  = '';
+          document.getElementById('pm-fecha-termino').value = '';
+          try {
+            const pr = await fetch('/api/courses', { credentials: 'same-origin' });
+            const courses = await pr.json();
+            courses.filter(c => c.estado === 'Activo').forEach(c => {
+              sel.innerHTML += `<option value="${c.code}" data-id="${c.id}">${c.nombre} (${c.code})</option>`;
+            });
+          } catch (_) {}
+          loadStudents(1);
+          return;
+        }
+        err.textContent = 'Ya existe un participante con esa CURP.';
+        return;
+      }
+
+      if (!res.ok) {
+        err.textContent = data.error || 'Error al guardar.';
+        if (data.fields) {
+          err.textContent += ' ' + Object.values(data.fields).join(' ');
+        }
+        return;
+      }
+      // Save ID for optional enrollment step
+      document.getElementById('pm-participant-id').value = data.id;
+      document.getElementById('pm-created-name').textContent = data.nombre;
+      document.getElementById('pm-step2-wrapper').classList.remove('hidden');
+      _pStep(2);
+
+      // Populate course dropdown from /api/courses
+      const sel = document.getElementById('pm-course');
+      sel.innerHTML = '<option value="">— Sin inscribir por ahora —</option>';
+      document.getElementById('pm-edition').innerHTML = '<option value="">— Sin edición —</option>';
+      document.getElementById('pm-fecha-inicio').value  = '';
+      document.getElementById('pm-fecha-termino').value = '';
+      try {
+        const pr = await fetch('/api/courses', { credentials: 'same-origin' });
+        const courses = await pr.json();
+        courses.filter(c => c.estado === 'Activo').forEach(c => {
+          sel.innerHTML += `<option value="${c.code}" data-id="${c.id}">${c.nombre} (${c.code})</option>`;
+        });
+      } catch (_) {}
+    } catch (e) {
+      // Connection error — check if server actually saved it (try fetching by CURP)
+      try {
+        const chkRes  = await fetch(
+          `/api/participants?q=${encodeURIComponent(payload.nombre)}&per_page=5`,
+          { credentials: 'same-origin' }
+        );
+        const chkData = await chkRes.json();
+        const saved = (chkData.items || []).find(
+          p => p.curp && p.curp.toUpperCase() === payload.curp.toUpperCase()
+        );
+        if (saved) {
+          document.getElementById('pm-participant-id').value = saved.id;
+          document.getElementById('pm-created-name').textContent = saved.nombre;
+          document.getElementById('pm-step2-wrapper').classList.remove('hidden');
+          _pStep(2);
+          const sel2 = document.getElementById('pm-course');
+          sel2.innerHTML = '<option value="">— Sin inscribir por ahora —</option>';
+          document.getElementById('pm-edition').innerHTML = '<option value="">— Sin edición —</option>';
+          document.getElementById('pm-fecha-inicio').value  = '';
+          document.getElementById('pm-fecha-termino').value = '';
+          try {
+            const pr2 = await fetch('/api/courses', { credentials: 'same-origin' });
+            const courses2 = await pr2.json();
+            courses2.filter(c => c.estado === 'Activo').forEach(c => {
+              sel2.innerHTML += `<option value="${c.code}" data-id="${c.id}">${c.nombre} (${c.code})</option>`;
+            });
+          } catch (_) {}
+          loadStudents(1);
+          return;
+        }
+      } catch (_) {}
+      err.textContent = 'Error de conexión. Verifica si el participante aparece en la lista.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Guardar y continuar →';
+    }
+  }
+
+  // ── Course → Edition cascade helpers ─────────────────────────────────────
+
+  let _editionCache = {};   // courseId → [{id, nombre, fecha_inicio, fecha_termino}]
+
+  async function _loadEditionsInto(courseId, selectEl, dateFields) {
+    selectEl.innerHTML = '<option value="">Cargando...</option>';
+    selectEl.disabled  = true;
+    try {
+      if (!_editionCache[courseId]) {
+        const res = await fetch(`/api/courses/${courseId}/editions`, { credentials: 'same-origin' });
+        _editionCache[courseId] = await res.json();
+      }
+      const eds = _editionCache[courseId].filter(e => e.estado === 'Activo');
+      if (!eds.length) {
+        selectEl.innerHTML = '<option value="">⚠ Sin grupos — crea uno primero en la pestaña Cursos</option>';
+        selectEl.disabled  = true;
+        return;
+      }
+      selectEl.innerHTML = '<option value="">— Selecciona un grupo —</option>';
+      eds.forEach(e => {
+        const lbl = `${e.nombre}`;
+        selectEl.innerHTML += `<option value="${e.id}" data-fi="${e.fecha_inicio}" data-ft="${e.fecha_termino}">${lbl}</option>`;
+      });
+      selectEl.disabled = false;
+    } catch (_) {
+      selectEl.innerHTML = '<option value="">Error al cargar</option>';
+    }
+  }
+
+  function _courseIdFromCode(selEl) {
+    const opt = selEl.options[selEl.selectedIndex];
+    return opt ? opt.getAttribute('data-id') : null;
+  }
+
+  async function onPmCourseChange(code) {
+    const selEl   = document.getElementById('pm-course');
+    const edSel   = document.getElementById('pm-edition');
+    const fi      = document.getElementById('pm-fecha-inicio');
+    const ft      = document.getElementById('pm-fecha-termino');
+    fi.value = ''; ft.value = '';
+    edSel.innerHTML = '<option value="">— Sin edición —</option>';
+    if (!code) return;
+    const courseId = _courseIdFromCode(selEl);
+    if (courseId) await _loadEditionsInto(courseId, edSel, { fi, ft });
+  }
+
+  function onPmEditionChange(edId) {
+    const edSel = document.getElementById('pm-edition');
+    const fi    = document.getElementById('pm-fecha-inicio');
+    const ft    = document.getElementById('pm-fecha-termino');
+    const opt   = edSel.options[edSel.selectedIndex];
+    if (edId && opt) {
+      fi.value = opt.getAttribute('data-fi') || '';
+      ft.value = opt.getAttribute('data-ft') || '';
+    } else {
+      fi.value = ''; ft.value = '';
+    }
+  }
+
+  async function onEpmCourseChange(code) {
+    const selEl = document.getElementById('epm-course');
+    const edSel = document.getElementById('epm-edition');
+    const fi    = document.getElementById('epm-fi');
+    const ft    = document.getElementById('epm-ft');
+    fi.value = ''; ft.value = '';
+    edSel.innerHTML = '<option value="">— Sin edición —</option>';
+    if (!code) return;
+    const courseId = _courseIdFromCode(selEl);
+    if (courseId) await _loadEditionsInto(courseId, edSel, { fi, ft });
+  }
+
+  function onEpmEditionChange(edId) {
+    const edSel = document.getElementById('epm-edition');
+    const fi    = document.getElementById('epm-fi');
+    const ft    = document.getElementById('epm-ft');
+    const opt   = edSel.options[edSel.selectedIndex];
+    if (edId && opt) {
+      fi.value = opt.getAttribute('data-fi') || '';
+      ft.value = opt.getAttribute('data-ft') || '';
+    } else {
+      fi.value = ''; ft.value = '';
+    }
+  }
+
+  async function submitEnrollment() {
+    const participantId = document.getElementById('pm-participant-id').value;
+    const courseCode    = document.getElementById('pm-course').value;
+    const err           = document.getElementById('pm-enroll-error');
+    err.textContent     = '';
+
+    if (!courseCode) {
+      // User chose not to enroll — just close and refresh
+      closeParticipantModal();
+      loadStudents(1);
+      showToast('Participante creado correctamente.', false);
+      return;
+    }
+
+    const editionVal = document.getElementById('pm-edition').value;
+    if (!editionVal) {
+      document.getElementById('pm-enroll-error').textContent = 'Selecciona un grupo antes de inscribir.';
+      return;
+    }
+
+    const btn = document.getElementById('pm-enroll-btn');
+    btn.disabled = true;
+    btn.textContent = 'Inscribiendo…';
+
+    const payload = {
+      participant_id: participantId,
+      course_code:    courseCode,
+      edition_id:     document.getElementById('pm-edition').value || null,
+      fecha_inicio:   document.getElementById('pm-fecha-inicio').value || null,
+      fecha_termino:  document.getElementById('pm-fecha-termino').value || null,
+      calificacion:   document.getElementById('pm-calificacion').value || null,
+      resultado:      document.getElementById('pm-resultado').value,
+    };
+
+    try {
+      const res  = await fetch('/api/enrollments', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+        credentials: 'same-origin',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        err.textContent = data.error || 'Error al inscribir.';
+        return;
+      }
+
+      // Show success
+      const folioLine = data.folio && data.folio !== '—'
+        ? `<p class="text-xs font-mono text-brand-700 mt-1">${data.folio}</p>`
+        : '';
+      document.getElementById('pm-success-msg').innerHTML =
+        `Participante inscrito como <strong>${data.resultado}</strong>.${folioLine}`;
+      document.getElementById('pm-success').classList.remove('hidden');
+      document.getElementById('pm-step2').classList.add('hidden');
+
+      loadStudents(1);
+      loadCertificates(1);
+    } catch (e) {
+      err.textContent = 'Error de conexión. Verifica en la pestaña Certificados si la inscripción quedó guardada.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Inscribir';
+    }
+  }
+
+  // Live CURP uppercase
+  document.getElementById('pm-curp')?.addEventListener('input', function() {
+    this.value = this.value.toUpperCase();
+  });
+
+  // ── Edit certificate modal ─────────────────────────────────────────────────
+  function openEditCertModal(certId, courseId, editionId, cal, resultado, fechaInicio, fechaTerm) {
+    document.getElementById('ecm-cert-id').value      = certId;
+    document.getElementById('ecm-course-id').value    = courseId || '';
+    document.getElementById('ecm-edition-id').value   = editionId || '';
+    document.getElementById('ecm-calificacion').value = cal || '';
+    document.getElementById('ecm-resultado').value    = resultado || 'Pendiente';
+    document.getElementById('ecm-error').textContent  = '';
+    document.getElementById('ecm-success').classList.add('hidden');
+    document.getElementById('ecm-form').classList.remove('hidden');
+    document.getElementById('ecm-modal').classList.remove('hidden');
+  }
+
+  function closeEditCertModal() {
+    document.getElementById('ecm-modal').classList.add('hidden');
+  }
+
+  // ── Assign group modal (from participant historial) ──────────────────────────
+  async function openAssignGroupModal(certId, courseId) {
+    document.getElementById('agm-cert-id').value  = certId;
+    document.getElementById('agm-error').textContent = '';
+    document.getElementById('agm-success').classList.add('hidden');
+    document.getElementById('agm-form').classList.remove('hidden');
+    const sel = document.getElementById('agm-edition-sel');
+    sel.innerHTML = '<option value="">Cargando grupos…</option>';
+    document.getElementById('agm-modal').classList.remove('hidden');
+    try {
+      const r   = await fetch(`/api/courses/${courseId}/editions`, { credentials: 'same-origin' });
+      const eds = await r.json();
+      sel.innerHTML = '<option value="">— Selecciona un grupo —</option>';
+      eds.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.id; opt.textContent = e.nombre;
+        sel.appendChild(opt);
+      });
+      if (!eds.length) sel.innerHTML = '<option value="">Sin grupos disponibles</option>';
+    } catch { sel.innerHTML = '<option value="">Error al cargar</option>'; }
+  }
+
+  async function submitAssignGroup() {
+    const certId = document.getElementById('agm-cert-id').value;
+    const sel    = document.getElementById('agm-edition-sel');
+    const err    = document.getElementById('agm-error');
+    err.textContent = '';
+    if (!sel.value) { err.textContent = 'Selecciona un grupo.'; return; }
+    const btn = document.getElementById('agm-submit-btn');
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    try {
+      const res  = await fetch(`/api/certificates/${certId}`, {
+        method: 'PUT', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ edition_id: sel.value }),
+      });
+      const data = await res.json();
+      if (!res.ok) { err.textContent = data.error || 'Error al guardar.'; return; }
+      document.getElementById('agm-form').classList.add('hidden');
+      document.getElementById('agm-success').classList.remove('hidden');
+      // Refresh the historial in the background
+      const pid = document.getElementById('epm-participant-id').value;
+      if (pid) {
+        const r2  = await fetch(`/api/participants/${pid}`, { credentials: 'same-origin' });
+        const full = await r2.json();
+        if (r2.ok) _renderEpmHistorial(full.certificates || []);
+      }
+      loadStudents(studentsPage);
+    } catch { err.textContent = 'Error de conexión.'; }
+    finally { btn.disabled = false; btn.textContent = 'Asignar'; }
+  }
+
+  async function submitEditCert() {
+    const certId = document.getElementById('ecm-cert-id').value;
+    const err    = document.getElementById('ecm-error');
+    err.textContent = '';
+    const btn = document.getElementById('ecm-submit-btn');
+    btn.disabled = true; btn.textContent = 'Guardando…';
+
+    try {
+      const res = await fetch(`/api/certificates/${certId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          resultado:    document.getElementById('ecm-resultado').value,
+          calificacion: document.getElementById('ecm-calificacion').value || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { err.textContent = data.error || 'Error al guardar.'; return; }
+
+      const folioLine = data.folio && data.folio !== '—'
+        ? `<p class="text-xs font-mono text-brand-700 mt-1">${data.folio}</p>` : '';
+      document.getElementById('ecm-success-msg').innerHTML =
+        `Actualizado a <strong>${document.getElementById('ecm-resultado').value}</strong>.${folioLine}`;
+      document.getElementById('ecm-form').classList.add('hidden');
+      document.getElementById('ecm-success').classList.remove('hidden');
+      loadCertificates(certsPage);
+    } catch (_) {
+      err.textContent = 'Error de conexión.';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Guardar';
+    }
+  }
+
+  // ── Edit participant (unified: data + add course) ─────────────────────────
+  // openParticipantDetail is the new entry point (row click); keep old name as alias
+  async function openParticipantDetail(participantId) {
+    // Use cached basic data for immediate display while full detail loads
+    const cached = _participantMap[participantId] || {};
+    document.getElementById('epm-participant-id').value = participantId;
+    document.getElementById('epm-header-nombre').textContent  = cached.nombre || '…';
+    document.getElementById('epm-header-sub').textContent     = [cached.cargo, cached.institucion].filter(Boolean).join(' · ') || '—';
+    document.getElementById('epm-nombre').value               = cached.nombre || '';
+    document.getElementById('epm-institucion').value          = cached.institucion || '';
+    document.getElementById('epm-cargo').value                = cached.cargo || '';
+    document.getElementById('epm-correo').value               = (cached.correo && cached.correo !== '—') ? cached.correo : '';
+    document.getElementById('epm-fecha-nac').value            = '';
+    document.getElementById('epm-curp-display').textContent   = cached.curp ? cached.curp.slice(0,4) + '••••••••••' + cached.curp.slice(-4) : '—';
+    document.getElementById('epm-created-display').textContent = cached.created_at || '—';
+    document.getElementById('epm-error').textContent          = '';
+    document.getElementById('epm-success').classList.add('hidden');
+
+    // Reset course tab
+    const enrollDiv = document.getElementById('epm-enroll-form');
+    enrollDiv.querySelector('form')?.reset();
+    document.getElementById('epm-enroll-error').textContent = '';
+    document.getElementById('epm-enroll-success').classList.add('hidden');
+    enrollDiv.classList.remove('hidden');
+
+    const sel = document.getElementById('epm-course');
+    sel.innerHTML = '<option value="">— Selecciona un programa —</option>';
+    document.getElementById('epm-edition').innerHTML = '<option value="">— Sin grupo asignado —</option>';
+    document.getElementById('epm-fi').value = '';
+    document.getElementById('epm-ft').value = '';
+    try {
+      const r = await fetch('/api/courses', { credentials: 'same-origin' });
+      const courses = await r.json();
+      courses.filter(c => c.estado === 'Activo').forEach(c => {
+        sel.innerHTML += `<option value="${c.code}" data-id="${c.id}">${c.nombre} (${c.code})</option>`;
+      });
+    } catch (_) {}
+
+    // Reset historial tab to loading state
+    document.getElementById('epm-historial-loading').classList.remove('hidden');
+    document.getElementById('epm-historial-content').classList.add('hidden');
+
+    _epmTab('datos');
+    document.getElementById('epm-modal').classList.remove('hidden');
+
+    // Fetch full participant detail (including cert history) in background
+    try {
+      const r2   = await fetch(`/api/participants/${participantId}`, { credentials: 'same-origin' });
+      const full  = await r2.json();
+      if (!r2.ok) throw new Error(full.error || 'Error');
+
+      // Enrich displayed data with full detail (fecha_nac, full curp display)
+      document.getElementById('epm-curp-display').textContent    = full.curp || '—';
+      document.getElementById('epm-fecha-nac').value             = full.fecha_nac || '';
+      document.getElementById('epm-correo').value                = (full.correo && full.correo !== '—') ? full.correo : '';
+
+      _renderEpmHistorial(full.certificates || []);
+    } catch (e) {
+      console.error('openParticipantDetail:', e);
+      document.getElementById('epm-historial-loading').textContent = 'Error al cargar historial.';
+    }
+  }
+
+  // Keep old name as alias so any stale references don't break
+  function openEditParticipantModal(participantId) {
+    return openParticipantDetail(participantId);
+  }
+
+  function _renderEpmHistorial(certs) {
+    document.getElementById('epm-historial-loading').classList.add('hidden');
+    document.getElementById('epm-historial-content').classList.remove('hidden');
+
+    const hasNoGroup = certs.some(c => !c.edition_id);
+    document.getElementById('epm-historial-no-group-alert').classList.toggle('hidden', !hasNoGroup);
+
+    const tbody = document.getElementById('epm-historial-tbody');
+    if (certs.length === 0) {
+      tbody.innerHTML = '';
+      document.getElementById('epm-historial-empty').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('epm-historial-empty').classList.add('hidden');
+
+    const estadoBadge = (estado, resultado) => {
+      if (resultado === 'Acreditado')     return `<span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium">Acreditado</span>`;
+      if (resultado === 'No Acreditado')  return `<span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">No acreditado</span>`;
+      return `<span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">Pendiente</span>`;
+    };
+
+    tbody.innerHTML = certs.map(c => {
+      const grupoCell = c.edition_nombre
+        ? `<span class="text-slate-700">${c.edition_nombre}</span>`
+        : `<span class="text-amber-600 font-medium flex items-center gap-1">
+             <svg class="w-3.5 h-3.5 inline" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+             Sin grupo
+           </span>`;
+      const assignBtn = !c.edition_id
+        ? `<button onclick="openAssignGroupModal('${c.id}', '${c.course_id}')"
+             class="text-xs font-medium text-amber-600 hover:text-amber-800 border border-amber-200 hover:border-amber-400 px-2 py-1 rounded-lg transition-colors">
+             Asignar grupo
+           </button>`
+        : '';
+      const folio = c.folio && c.folio !== '—'
+        ? `<span class="font-mono text-xs text-slate-700">${c.folio}</span>`
+        : `<span class="text-slate-400 text-xs">—</span>`;
+      return `
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-4 py-3 text-sm">
+            <p class="font-medium text-slate-800">${c.curso}</p>
+            ${c.fecha_inicio ? `<p class="text-xs text-slate-400">${c.fecha_inicio} → ${c.fecha_termino || '—'}</p>` : ''}
+          </td>
+          <td class="px-4 py-3 text-sm">${grupoCell}</td>
+          <td class="px-4 py-3">${estadoBadge(c.estado, c.resultado)}</td>
+          <td class="px-4 py-3">${folio}</td>
+          <td class="px-4 py-3 text-right">${assignBtn}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  function closeEditParticipantModal() {
+    document.getElementById('epm-modal').classList.add('hidden');
+  }
+
+  function _epmTab(tab) {
+    ['datos','historial','curso'].forEach(t => {
+      const btn = document.getElementById(`epm-tab-${t}`);
+      if (!btn) return;
+      const active = t === tab;
+      btn.classList.toggle('border-brand-600', active);
+      btn.classList.toggle('text-brand-700',   active);
+      btn.classList.toggle('font-semibold',    active);
+      btn.classList.toggle('border-transparent', !active);
+      btn.classList.toggle('text-slate-500',     !active);
+      document.getElementById(`epm-section-${t}`).classList.toggle('hidden', !active);
+    });
+  }
+
+  async function submitEditParticipant() {
+    const id  = document.getElementById('epm-participant-id').value;
+    const err = document.getElementById('epm-error');
+    err.textContent = '';
+    const btn = document.getElementById('epm-save-btn');
+    btn.disabled = true; btn.textContent = 'Guardando…';
+
+    try {
+      const res = await fetch(`/api/participants/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          nombre:      document.getElementById('epm-nombre').value.trim(),
+          institucion: document.getElementById('epm-institucion').value.trim() || 'N/A',
+          cargo:       document.getElementById('epm-cargo').value.trim() || 'N/A',
+          correo:      document.getElementById('epm-correo').value.trim() || null,
+          fecha_nac:   document.getElementById('epm-fecha-nac').value || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { err.textContent = data.error || 'Error al guardar.'; return; }
+
+      document.getElementById('epm-success-msg').textContent = `Datos de ${data.nombre} actualizados.`;
+      document.getElementById('epm-success').classList.remove('hidden');
+      setTimeout(() => document.getElementById('epm-success').classList.add('hidden'), 3000);
+      loadStudents(studentsPage);
+    } catch (_) {
+      err.textContent = 'Error de conexión.';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Guardar datos';
+    }
+  }
+
+  async function submitEpmEnroll() {
+    const participantId = document.getElementById('epm-participant-id').value;
+    const courseCode    = document.getElementById('epm-course').value;
+    const err           = document.getElementById('epm-enroll-error');
+    err.textContent = '';
+    if (!courseCode) { err.textContent = 'Selecciona un programa.'; return; }
+    if (!document.getElementById('epm-edition').value) { err.textContent = 'Selecciona un grupo.'; return; }
+
+    const btn = document.getElementById('epm-enroll-btn');
+    btn.disabled = true; btn.textContent = 'Inscribiendo…';
+
+    try {
+      const res = await fetch('/api/enrollments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          participant_id: participantId,
+          course_code:    courseCode,
+          edition_id:     document.getElementById('epm-edition').value || null,
+          fecha_inicio:   document.getElementById('epm-fi').value  || null,
+          fecha_termino:  document.getElementById('epm-ft').value  || null,
+          calificacion:   document.getElementById('epm-cal').value || null,
+          resultado:      document.getElementById('epm-res').value,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { err.textContent = data.error || 'Error al inscribir.'; return; }
+
+      const folioLine = data.folio && data.folio !== '—'
+        ? `<span class="font-mono text-brand-700"> · ${data.folio}</span>` : '';
+      document.getElementById('epm-enroll-success-msg').innerHTML =
+        `Inscrito como <strong>${data.resultado}</strong>.${folioLine}`;
+      document.getElementById('epm-enroll-form').classList.add('hidden');
+      document.getElementById('epm-enroll-success').classList.remove('hidden');
+      loadStudents(studentsPage);
+      loadCertificates(1);
+    } catch (_) {
+      err.textContent = 'Error de conexión.';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Inscribir';
+    }
+  }
+</script>
+
+<!-- ── Edit Certificate Modal ────────────────────────────────────────── -->
+<div id="ecm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(15,23,42,0.5);">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+    <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-slate-900">Editar inscripción</h2>
+      <button onclick="closeEditCertModal()" class="text-slate-400 hover:text-slate-600 p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <input type="hidden" id="ecm-cert-id" />
+    <input type="hidden" id="ecm-course-id" />
+    <input type="hidden" id="ecm-edition-id" />
+
+    <div id="ecm-form" class="px-6 py-5">
+      <form onsubmit="event.preventDefault(); submitEditCert();" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Calificación (0–10)</label>
+            <input id="ecm-calificacion" type="number" min="0" max="10" step="0.1" placeholder="Ej: 9.5"
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Resultado</label>
+            <select id="ecm-resultado"
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+              <option value="Pendiente">Pendiente</option>
+              <option value="Acreditado">Acreditado</option>
+              <option value="No Acreditado">No Acreditado</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-400">Si cambias a <strong>Acreditado</strong>, se genera el folio y el PDF quedará disponible.</p>
+        <p id="ecm-error" class="text-xs text-red-600 min-h-[1rem]"></p>
+
+        <div class="flex justify-end gap-3 pt-1">
+          <button type="button" onclick="closeEditCertModal()"
+            class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+            Cancelar
+          </button>
+          <button id="ecm-submit-btn" type="submit"
+            class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div id="ecm-success" class="hidden px-6 py-8 text-center">
+      <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <p class="text-sm font-semibold text-slate-900 mb-1">¡Actualizado!</p>
+      <p id="ecm-success-msg" class="text-sm text-slate-600 mb-4"></p>
+      <button onclick="closeEditCertModal()"
+        class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Assign Group Modal ────────────────────────────────────────────────── -->
+<div id="agm-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4"
+     style="background:rgba(15,23,42,0.5);">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+    <div class="px-6 pt-5 pb-4 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="text-base font-bold text-slate-900">Asignar grupo</h2>
+      <button onclick="document.getElementById('agm-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <input type="hidden" id="agm-cert-id" />
+    <div id="agm-form" class="px-6 py-5 space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Grupo <span class="text-red-500">*</span></label>
+        <select id="agm-edition-sel"
+          class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+          <option value="">Cargando…</option>
+        </select>
+      </div>
+      <p id="agm-error" class="text-xs text-red-600 min-h-[1rem]"></p>
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="document.getElementById('agm-modal').classList.add('hidden')"
+          class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Cancelar</button>
+        <button id="agm-submit-btn" onclick="submitAssignGroup()"
+          class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">Asignar</button>
+      </div>
+    </div>
+    <div id="agm-success" class="hidden px-6 py-8 text-center">
+      <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <p class="text-sm font-semibold text-slate-900 mb-4">¡Grupo asignado!</p>
+      <button onclick="document.getElementById('agm-modal').classList.add('hidden')"
+        class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Participant Detail Modal (datos + historial + agregar curso) ──────── -->
+<div id="epm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(15,23,42,0.5);">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col" style="max-height:90vh;">
+
+    <!-- Header -->
+    <div class="px-6 pt-5 pb-0 flex items-start justify-between flex-shrink-0">
+      <div>
+        <h2 class="text-lg font-bold text-slate-900" id="epm-header-nombre">Participante</h2>
+        <p class="text-xs text-slate-400 mt-0.5" id="epm-header-sub">—</p>
+      </div>
+      <button onclick="closeEditParticipantModal()" class="text-slate-400 hover:text-slate-600 p-1 mt-0.5">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-slate-200 mt-4 px-6 flex-shrink-0">
+      <button id="epm-tab-datos" onclick="_epmTab('datos')"
+        class="px-4 py-2.5 text-sm border-b-2 border-brand-600 text-brand-700 font-semibold -mb-px transition-colors">
+        Datos personales
+      </button>
+      <button id="epm-tab-historial" onclick="_epmTab('historial')"
+        class="px-4 py-2.5 text-sm border-b-2 border-transparent text-slate-500 -mb-px hover:text-slate-700 transition-colors">
+        Historial de cursos
+      </button>
+      <button id="epm-tab-curso" onclick="_epmTab('curso')"
+        class="px-4 py-2.5 text-sm border-b-2 border-transparent text-slate-500 -mb-px hover:text-slate-700 transition-colors">
+        Agregar curso
+      </button>
+    </div>
+
+    <input type="hidden" id="epm-participant-id" />
+
+    <div id="epm-body" class="overflow-y-auto flex-1">
+      <!-- ── Tab: datos ── -->
+      <div id="epm-section-datos" class="px-6 py-5">
+        <form onsubmit="event.preventDefault(); submitEditParticipant();" class="space-y-4">
+          <!-- Read-only info row -->
+          <div class="grid grid-cols-2 gap-3 bg-slate-50 rounded-xl p-4 text-sm">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 mb-0.5">CURP</p>
+              <p id="epm-curp-display" class="font-mono text-slate-700 text-xs tracking-wide">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500 mb-0.5">Registro en sistema</p>
+              <p id="epm-created-display" class="text-slate-700">—</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre completo <span class="text-red-500">*</span></label>
+              <input id="epm-nombre" required
+                class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Institución</label>
+              <input id="epm-institucion" placeholder="Ej: Guardería IMSS 123"
+                class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Cargo</label>
+              <input id="epm-cargo" placeholder="Ej: Educadora"
+                class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Correo electrónico</label>
+              <input id="epm-correo" type="email"
+                class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha de nacimiento</label>
+              <input id="epm-fecha-nac" type="date"
+                class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+            </div>
+          </div>
+
+          <div id="epm-success" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5 flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <p id="epm-success-msg" class="text-xs text-emerald-700"></p>
+          </div>
+          <p id="epm-error" class="text-xs text-red-600 min-h-[1rem]"></p>
+
+          <div class="flex justify-end gap-3">
+            <button type="button" onclick="closeEditParticipantModal()"
+              class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+              Cerrar
+            </button>
+            <button id="epm-save-btn" type="submit"
+              class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
+              Guardar datos
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Tab: historial ── -->
+      <div id="epm-section-historial" class="hidden px-6 py-5">
+        <div id="epm-historial-loading" class="py-8 text-center text-sm text-slate-400">Cargando historial…</div>
+        <div id="epm-historial-content" class="hidden">
+          <div id="epm-historial-no-group-alert" class="hidden mb-4 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+            <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            <p class="text-xs text-amber-700">Algunos certificados no tienen grupo asignado. Usa el botón <strong>Asignar grupo</strong> para completar la información.</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 overflow-hidden">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                  <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Curso</th>
+                  <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Grupo</th>
+                  <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
+                  <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Folio</th>
+                  <th class="px-4 py-2.5"></th>
+                </tr>
+              </thead>
+              <tbody id="epm-historial-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+          <p id="epm-historial-empty" class="hidden py-6 text-center text-sm text-slate-400">Este participante aún no tiene cursos.</p>
+        </div>
+      </div>
+
+      <!-- ── Tab: curso ── -->
+      <div id="epm-section-curso" class="hidden px-6 py-5">
+        <div id="epm-enroll-form">
+          <form onsubmit="event.preventDefault(); submitEpmEnroll();" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Programa <span class="text-red-500">*</span></label>
+              <select id="epm-course" onchange="onEpmCourseChange(this.value)"
+                class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+                <option value="">— Selecciona un programa —</option>
+              </select>
+            </div>
+            <div id="epm-edition-row">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Grupo / Edición</label>
+              <select id="epm-edition" onchange="onEpmEditionChange(this.value)"
+                class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+                <option value="">— Sin grupo asignado —</option>
+              </select>
+            </div>
+            <input type="hidden" id="epm-fi" />
+            <input type="hidden" id="epm-ft" />
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Calificación (0–10)</label>
+                <input id="epm-cal" type="number" min="0" max="10" step="0.1" placeholder="Ej: 9.5"
+                  class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Resultado</label>
+                <select id="epm-res" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Acreditado">Acreditado</option>
+                  <option value="No Acreditado">No Acreditado</option>
+                </select>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400">Si el resultado es <strong>Acreditado</strong>, se genera el folio automáticamente.</p>
+            <p id="epm-enroll-error" class="text-xs text-red-600 min-h-[1rem]"></p>
+            <div class="flex justify-end gap-3">
+              <button type="button" onclick="closeEditParticipantModal()"
+                class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                Cancelar
+              </button>
+              <button id="epm-enroll-btn" type="submit"
+                class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
+                Inscribir
+              </button>
+            </div>
+          </form>
+        </div>
+        <div id="epm-enroll-success" class="hidden py-6 text-center">
+          <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <p id="epm-enroll-success-msg" class="text-sm text-slate-700 mb-4"></p>
+          <button onclick="closeEditParticipantModal()"
+            class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Add Participant Modal ───────────────────────────────────────────── -->
+<div id="pm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(15,23,42,0.5);">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+
+    <!-- Header -->
+    <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-bold text-slate-900">Agregar participante</h2>
+        <div class="flex items-center gap-2 mt-2">
+          <div id="pm-dot1" class="w-2.5 h-2.5 rounded-full bg-brand-600"></div>
+          <div class="h-px w-6 bg-slate-200"></div>
+          <div id="pm-dot2" class="w-2.5 h-2.5 rounded-full bg-brand-200"></div>
+        </div>
+      </div>
+      <button onclick="closeParticipantModal()" class="text-slate-400 hover:text-slate-600 p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <input type="hidden" id="pm-participant-id" />
+
+    <!-- Step 1: Participant data -->
+    <div id="pm-step1">
+      <form id="pm-form-p" onsubmit="event.preventDefault(); submitParticipant();" class="px-6 py-5 space-y-4">
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">
+              Nombre completo <span class="text-red-500">*</span>
+            </label>
+            <input id="pm-nombre" required placeholder="Ej: Ana García Martínez"
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+          </div>
+
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">
+              CURP <span class="text-red-500">*</span>
+            </label>
+            <input id="pm-curp" required maxlength="18" placeholder="Ej: GAMA900115MJCRRL07"
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-brand-300" />
+            <p class="text-xs text-slate-400 mt-1">18 caracteres. Se encripta en la base de datos.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha de nacimiento</label>
+            <input id="pm-fecha-nac" type="date"
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Correo electrónico</label>
+            <input id="pm-correo" type="email" placeholder="correo@ejemplo.com"
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Institución</label>
+            <input id="pm-institucion" placeholder="Ej: Guardería IMSS 123"
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Cargo</label>
+            <input id="pm-cargo" placeholder="Ej: Educadora"
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+          </div>
+        </div>
+
+        <p id="pm-error" class="text-xs text-red-600 min-h-[1rem]"></p>
+
+        <div class="flex justify-end gap-3 pt-1">
+          <button type="button" onclick="closeParticipantModal()"
+            class="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+            Cancelar
+          </button>
+          <button id="pm-save-btn" type="submit"
+            class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
+            Guardar y continuar →
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Step 2: Optional enrollment -->
+    <div id="pm-step2" class="hidden">
+      <div class="px-6 py-5">
+        <p class="text-sm text-slate-600 mb-4">
+          <span class="font-semibold text-brand-700" id="pm-created-name"></span> fue creado.
+          ¿Deseas inscribirlo en un programa ahora?
+        </p>
+
+        <form id="pm-form-e" onsubmit="event.preventDefault(); submitEnrollment();" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Programa</label>
+            <select id="pm-course" onchange="onPmCourseChange(this.value)"
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+              <option value="">— Sin inscribir por ahora —</option>
+            </select>
+          </div>
+
+          <div id="pm-edition-row">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Grupo / Edición</label>
+            <select id="pm-edition" onchange="onPmEditionChange(this.value)"
+              class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+              <option value="">— Sin grupo asignado —</option>
+            </select>
+          </div>
+
+          <input type="hidden" id="pm-fecha-inicio" />
+          <input type="hidden" id="pm-fecha-termino" />
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Calificación (0–10)</label>
+              <input id="pm-calificacion" type="number" min="0" max="10" step="0.1" placeholder="Ej: 9.5"
+                class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Resultado</label>
+              <select id="pm-resultado"
+                class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+                <option value="Pendiente">Pendiente</option>
+                <option value="Acreditado">Acreditado</option>
+                <option value="No Acreditado">No Acreditado</option>
+              </select>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-400">Si el resultado es <strong>Acreditado</strong>, se genera automáticamente el folio y el certificado queda listo para descargar.</p>
+
+          <p id="pm-enroll-error" class="text-xs text-red-600 min-h-[1rem]"></p>
+
+          <div class="flex justify-end gap-3 pt-1">
+            <button type="button" onclick="closeParticipantModal(); loadStudents(1);"
+              class="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+              Omitir
+            </button>
+            <button id="pm-enroll-btn" type="submit"
+              class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700 transition-colors">
+              Inscribir
+            </button>
+          </div>
+        </form>
+
+        <!-- Success message -->
+        <div id="pm-success" class="hidden mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
+          <p class="text-sm font-semibold text-emerald-700">¡Listo!</p>
+          <p id="pm-success-msg" class="text-sm text-emerald-600 mt-1"></p>
+          <button onclick="closeParticipantModal()"
+            class="mt-3 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 transition-colors">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─── MODAL: NEW COURSE ─── -->
+<div id="new-course-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(15,23,42,0.5);">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <div class="px-6 pt-5 pb-4 flex items-center justify-between border-b border-slate-100">
+      <h2 class="text-lg font-bold text-slate-900">Nuevo curso</h2>
+      <button onclick="closeAllModals()" class="text-slate-400 hover:text-slate-600 p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form onsubmit="event.preventDefault(); submitNewCourse();" class="p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Código <span class="text-red-500">*</span></label>
+          <input id="nc-code" required placeholder="Ej: C-005" maxlength="20"
+            class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300 font-mono uppercase" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Horas <span class="text-red-500">*</span></label>
+          <input id="nc-horas" required type="number" min="1" placeholder="40"
+            class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre del curso <span class="text-red-500">*</span></label>
+          <input id="nc-nombre" required placeholder="Ej: Puericultura"
+            class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Modalidad</label>
+          <select id="nc-modalidad" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+            <option>Presencial</option>
+            <option>Online</option>
+            <option>Presencial/Online</option>
+            <option>Híbrido</option>
+          </select>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Vigencia</label>
+          <div class="flex items-center gap-2">
+            <input id="nc-vigencia" type="number" min="1" placeholder="Sin vencimiento"
+              class="flex-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+            <span class="text-sm text-slate-500 whitespace-nowrap">meses</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Dejar vacío = el certificado no vence nunca.</p>
+        </div>
+      </div>
+      <p id="nc-error" class="text-xs text-red-600 min-h-[1rem]"></p>
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeAllModals()" class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50">Cancelar</button>
+        <button id="nc-save-btn" type="submit" class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── MODAL: NEW EDITION ─── -->
+<div id="new-edition-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(15,23,42,0.5);">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <div class="px-6 pt-5 pb-4 flex items-center justify-between border-b border-slate-100">
+      <div>
+        <h2 class="text-lg font-bold text-slate-900">Nuevo grupo</h2>
+        <p id="ned-course-label" class="text-xs text-slate-500 mt-0.5"></p>
+      </div>
+      <button onclick="closeAllModals()" class="text-slate-400 hover:text-slate-600 p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <input type="hidden" id="ned-course-id" />
+    <input type="hidden" id="ned-edition-id" />
+    <form onsubmit="event.preventDefault(); submitNewEdition();" class="p-6 space-y-4">
+      <!-- Course selector — only shown when opened from the header button -->
+      <div id="ned-course-row" class="hidden">
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Curso <span class="text-red-500">*</span></label>
+        <select id="ned-course-sel"
+          class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+          <option value="">— Selecciona un curso —</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre del grupo <span class="text-red-500">*</span></label>
+        <input id="ned-nombre" required placeholder="Ej: Generación Enero 2026"
+          class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha inicio <span class="text-red-500">*</span></label>
+          <input id="ned-inicio" required type="date"
+            class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha término <span class="text-red-500">*</span></label>
+          <input id="ned-termino" required type="date"
+            class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Cupo (opcional)</label>
+          <input id="ned-cupo" type="number" min="1" placeholder="Sin límite"
+            class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Estado</label>
+          <select id="ned-estado" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300">
+            <option value="Activo">Activo</option>
+            <option value="Cerrado">Cerrado</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <p id="ned-error" class="text-xs text-red-600 min-h-[1rem]"></p>
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeAllModals()" class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50">Cancelar</button>
+        <button id="ned-save-btn" type="submit" class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700">Guardar grupo</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- ─── MODAL: EDIT VIGENCIA ─── -->
+<div id="vigencia-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(15,23,42,0.5);">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+    <div class="px-6 pt-5 pb-4 flex items-center justify-between border-b border-slate-100">
+      <div>
+        <h2 class="text-lg font-bold text-slate-900">Vigencia del curso</h2>
+        <p id="vig-course-label" class="text-xs text-slate-500 mt-0.5"></p>
+      </div>
+      <button onclick="closeAllModals()" class="text-slate-400 hover:text-slate-600 p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <input type="hidden" id="vig-course-id" />
+    <form onsubmit="event.preventDefault(); submitVigencia();" class="p-6 space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Meses de vigencia</label>
+        <div class="flex items-center gap-2">
+          <input id="vig-meses" type="number" min="1" placeholder="Sin vencimiento"
+            class="flex-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+          <span class="text-sm text-slate-500">meses</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">Dejar vacío = los certificados de este curso no vencen nunca.</p>
+      </div>
+      <div class="bg-violet-50 rounded-xl p-3 text-xs text-violet-700">
+        Este valor aplica a <strong>todos</strong> los certificados emitidos de este curso. El vencimiento se calcula desde la <strong>fecha de emisión</strong> de cada certificado.
+      </div>
+      <p id="vig-error" class="text-xs text-red-600 min-h-[1rem]"></p>
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeAllModals()" class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50">Cancelar</button>
+        <button id="vig-save-btn" type="submit" class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- ─── MODAL: VIEW GROUPS ─── -->
+<div id="groups-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(15,23,42,0.5);">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
+    <div class="px-6 pt-5 pb-4 flex items-center justify-between border-b border-slate-100 flex-shrink-0">
+      <div>
+        <h2 class="text-lg font-bold text-slate-900">Grupos</h2>
+        <p id="gm-course-label" class="text-xs text-slate-500 mt-0.5"></p>
+      </div>
+      <button onclick="closeAllModals()" class="text-slate-400 hover:text-slate-600 p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <input type="hidden" id="gm-course-id" />
+    <div id="gm-list" class="overflow-y-auto flex-1 divide-y divide-slate-100 px-2 py-2"></div>
+    <div id="gm-footer" class="px-6 py-4 border-t border-slate-100 flex-shrink-0 flex justify-end gap-3">
+      <button onclick="closeAllModals()" class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50">Cerrar</button>
+      <button id="gm-add-btn" onclick="_gmAddGroup()" class="px-5 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700">+ Agregar grupo</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
